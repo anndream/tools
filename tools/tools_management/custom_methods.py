@@ -131,6 +131,7 @@ def get_item_details(doc, item):
 			d.tailoring_description = frappe.db.get_value('Item', item, 'description')
 			d.tailoring_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.tailoring_rate = frappe.db.get_value('Item Price',{'price_list':d.tailoring_price_list,'item_code':item},'price_list_rate')
+			d.tailoring_warehouse = frappe.db.get_value('Item', item, 'default_warehouse')
 	return "Done"
 
 def get_merchandise_item_details(doc, item):
@@ -140,6 +141,7 @@ def get_merchandise_item_details(doc, item):
 			d.merchandise_description = frappe.db.get_value('Item', item, 'description')
 			d.merchandise_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.merchandise_rate = frappe.db.get_value('Item Price',{'price_list':d.merchandise_price_list,'item_code':item},'price_list_rate')
+			d.merchandise_warehouse = frappe.db.get_value('Item', item, 'default_warehouse')
 	return "Done"
 
 @frappe.whitelist()

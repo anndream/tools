@@ -46,6 +46,21 @@
    "precision": ""
   }, 
   {
+   "fieldname": "column_break_4", 
+   "fieldtype": "Column Break", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "status", 
+   "fieldtype": "Select", 
+   "in_list_view": 1, 
+   "label": "Status", 
+   "options": "\nPending\nCompleted", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "fieldname": "trial_good_serial_no", 
    "fieldtype": "Link", 
    "label": "Trial Good Serial No", 
@@ -74,11 +89,18 @@
    "set_only_once": 0
   }, 
   {
-   "fieldname": "status", 
+   "fieldname": "good_status", 
    "fieldtype": "Select", 
-   "in_list_view": 1, 
-   "label": "Status", 
+   "label": "Good Status", 
    "options": "\nPending\nCompleted", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "stock_entry_ref", 
+   "fieldtype": "Data", 
+   "label": "Stock Entry Ref", 
+   "options": "Stock Entry", 
    "permlevel": 0, 
    "precision": ""
   }
@@ -90,7 +112,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2014-10-08 02:18:33.616828", 
+ "modified": "2014-10-08 13:29:11.142426", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Trials Transaction", 
