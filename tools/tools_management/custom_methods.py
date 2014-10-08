@@ -130,6 +130,7 @@ def get_item_details(doc, item):
 			d.tailoring_item_name = frappe.db.get_value('Item', item, 'item_name')
 			d.tailoring_description = frappe.db.get_value('Item', item, 'description')
 			d.tailoring_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
+			d.tailoring_rate = frappe.db.get_value('Item Price',{'price_list':d.tailoring_price_list,'item_code':item},'price_list_rate')
 	return "Done"
 
 def get_merchandise_item_details(doc, item):
@@ -138,10 +139,11 @@ def get_merchandise_item_details(doc, item):
 			d.merchandise_item_name = frappe.db.get_value('Item', item, 'item_name')
 			d.merchandise_description = frappe.db.get_value('Item', item, 'description')
 			d.merchandise_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
+			d.merchandise_rate = frappe.db.get_value('Item Price',{'price_list':d.merchandise_price_list,'item_code':item},'price_list_rate')
 	return "Done"
 
 @frappe.whitelist()
 def get_styles_details(item, style):
 	return frappe.db.sql("""select name,  image_viewer,default_value, abbreviation,
-	cost_to_customer, cost_to_tailor, extra_text_field from `tabStyle Item`
+	cost_to_customer, cost_to_tailor from `tabStyle Item`
 		where parent='%s' and style='%s'"""%(item, style),as_list=1)
