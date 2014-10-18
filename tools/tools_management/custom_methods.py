@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe.widgets.reportview import get_match_cond
 from frappe.utils import add_days, cint, cstr, date_diff, rounded, flt, getdate, nowdate, \
-	get_first_day, get_last_day,money_in_words, now
+	get_first_day, get_last_day,money_in_words, now, nowtime
 from frappe import _
 from frappe.model.db_query import DatabaseQuery
 
@@ -17,6 +17,13 @@ def branch_validation(doc, method):
 	br = frappe.db.sql("select name from `tabBranch` where warehouse='%s' or cost_center='%s'"%(doc.warehouse, doc.cost_center),as_list=1)
 	if br:
 		frappe.throw(_("Branch or Warehouse already assigned to Branch '{0}'").format(br[0][0]))
+
+def branches_creation(doc, method):
+	if frappe.db.get_value('Branches', doc.branch, 'name') != doc.branch:
+		br = frappe.new_doc('Branches')
+		br.branch_name = doc.branch
+		br.warehouse = doc.warehouse
+		br.save(ignore_permissions=True)
 
 def sales_invoice_on_submit_methods(doc, method):
 	generate_project_aginst_si(doc, method)
@@ -86,7 +93,7 @@ def merge_tailoring_items(doc,method):
 		e.base_price_list_rate=d.tailoring_base_price_list_rate
 		amt += flt(e.amount)
 	amount = merge_merchandise_items(doc)
-	doc.net_total_export = cstr(flt(amount) + flt(amt) + flt(doc.other_charges_total_export))
+	doc.net_total_export = cstr(flt(amount) + flt(amt))
 	doc.grand_total_export = cstr(flt(amount) + flt(amt) + flt(doc.other_charges_total_export))
 	doc.rounded_total_export = cstr(rounded(flt(amount) + flt(amt) + flt(doc.other_charges_total_export)))
 	doc.in_words_export = cstr(money_in_words(flt(amount) + flt(amt) + flt(doc.other_charges_total_export),doc.currency))
@@ -149,3 +156,96 @@ def get_styles_details(item, style):
 	return frappe.db.sql("""select name,  image_viewer,default_value, abbreviation,
 	cost_to_customer, cost_to_tailor from `tabStyle Item`
 		where parent='%s' and style='%s'"""%(item, style),as_list=1)
+
+@frappe.whitelist()
+def get_warehouse_wise_stock_balance(item, qty):
+	return frappe.db.sql("""select actual_qty, warehouse from `tabStock Ledger Entry` where item_code = '%s' and actual_qty >= %s"""%(item, qty), as_list=1)
+
+def update_work_order(doc, method):
+	frappe.db.sql(""" update `tabWork Order` set sales_invoice_no = '%(sales_invoice_no)s' 
+		where name in 
+			(select tailor_work_order from `tabWork Order Distribution` 
+				where parent = '%(sales_invoice_no)s') """%{'sales_invoice_no':doc.name})
+
+def create_se_or_mr(doc, method):
+	if doc.fabric_details:
+		fabric_details = eval(doc.fabric_details)
+		user_warehouse = get_user_warehouse()
+		for warehouse in fabric_details:
+			for item_details in fabric_details[warehouse]:
+				proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
+				if proc_warehouse == user_warehouse:
+					frappe.errprint("proc_warehouse and user warehouse are same")
+					make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+				else:
+					frappe.errprint("create material_request")
+					make_material_request(proc_warehouse, warehouse, item_details[0], item_details[1])
+
+def get_actual_fabrc_warehouse(si, item):
+	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
+					where parent = ( select name from `tabWork Order` 
+						where sales_invoice_no = '%s' and item_code = '%s') 
+					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1)
+
+	return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None
+
+def get_user_warehouse():
+	ret = frappe.db.sql(""" select warehouse from tabBranch b, tabUser u 
+		where b.name = u.branch and u.name = '%s' """%(frappe.session.user), as_list=1)
+
+	return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None	
+
+def make_stock_transfer(proc_warehouse, warehouse, fabric, qty):
+	fab_details = get_fabric_details(fabric)
+	
+	se = frappe.new_doc('Stock Entry')
+	se.naming_series =  get_series("Stock Entry")
+	se.purpose_type = 'Material Out'
+	se.purpose = 'Material Issue'
+	se.branch = frappe.db.get_value('User', frappe.session.use, 'branch')
+	se.posting_date = nowdate()
+	se.posting_time = nowtime().split('.')[0]
+	
+	sed = se.append('mtn_details', {})
+	sed.s_warehouse = warehouse
+	sed.target_branch = get_branch(proc_warehouse)
+	sed.item_code = fabric
+	sed.item_name = fab_details.get('item_name')
+	sed.description = fab_details.get('description')
+	sed.qty = qty
+	sed.stock_uom = fab_details.get('stock_uom')
+	sed.uom = fab_details.get('stock_uom')
+	sed.conversion_factor = 1
+	sed.incoming_rate = 0.0
+	sed.transfet_qty = qty * 1
+
+	se.save()
+
+def get_series(doctype):
+	return frappe.get_meta(doctype).get_field("naming_series").options or ""
+
+def get_fabric_details(fabric):
+	return frappe.db.get_value('Item', fabric,['item_name', 'description', 'stock_uom'], as_dict=1)
+
+def get_branch(proc_warehouse):
+	return frappe.db.get_value('Branch', {'warehouse': proc_warehouse}, 'name')
+
+def make_material_request(proc_warehouse, warehouse, fabric, qty):
+	fab_details = get_fabric_details(fabric)
+	
+	mrq = frappe.new_doc('Material Request')
+	mrq.naming_series =  get_series("Material Request")
+	mrq.material_request_type = 'Transfer'
+	# mrq.branch = frappe.db.get_value('User', frappe.session.use, 'branch')
+	
+	mrqd = mrq.append('indent_details', {})
+	mrqd.warehouse = proc_warehouse
+	mrqd.from_warehouse = warehouse
+	mrqd.item_code = fabric
+	mrqd.item_name = fab_details.get('item_name')
+	mrqd.description = fab_details.get('description')
+	mrqd.qty = qty
+	mrqd.uom = fab_details.get('stock_uom')
+	mrqd.schedule_date = add_days(nowdate(), 2)
+
+	mrq.save()
