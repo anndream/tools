@@ -10,6 +10,13 @@
  "document_type": "", 
  "fields": [
   {
+   "fieldname": "skip_trials", 
+   "fieldtype": "Check", 
+   "label": "Skip Trials", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
    "allow_on_submit": 0, 
    "fieldname": "trial_no", 
    "fieldtype": "Select", 
@@ -40,6 +47,7 @@
   {
    "fieldname": "trial_product", 
    "fieldtype": "Link", 
+   "hidden": 1, 
    "label": "Trial Product", 
    "options": "Item", 
    "permlevel": 0, 
@@ -63,6 +71,7 @@
   {
    "fieldname": "trial_good_serial_no", 
    "fieldtype": "Link", 
+   "hidden": 1, 
    "label": "Trial Good Serial No", 
    "options": "Serial No", 
    "permlevel": 0, 
@@ -91,6 +100,7 @@
   {
    "fieldname": "good_status", 
    "fieldtype": "Select", 
+   "hidden": 1, 
    "label": "Good Status", 
    "options": "\nPending\nCompleted", 
    "permlevel": 0, 
@@ -99,6 +109,7 @@
   {
    "fieldname": "stock_entry_ref", 
    "fieldtype": "Data", 
+   "hidden": 1, 
    "label": "Stock Entry Ref", 
    "options": "Stock Entry", 
    "permlevel": 0, 
@@ -112,7 +123,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2014-10-08 13:29:11.142426", 
+ "modified": "2014-10-20 19:18:42.736095", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Trials Transaction", 
