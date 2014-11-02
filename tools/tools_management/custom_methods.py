@@ -76,7 +76,7 @@ def merge_tailoring_items(doc,method):
 		e.item_name=d.tailoring_item_name
 		e.work_order=d.tailoring_work_order
 		e.description=d.tailoring_description
-		e.warehouse=d.tailoring_warehouse
+		e.warehouse= frappe.db.get_value('Branch', d.tailoring_branch, 'warehouse')
 		e.income_account=d.tailoring_income_account
 		e.cost_center=d.tailoring_cost_center
 		e.batch_no=d.tailoring_batch_no
@@ -113,7 +113,7 @@ def merge_merchandise_items(doc):
 		e.item_name=d.merchandise_item_name
 		e.work_order=d.merchandise_work_order
 		e.description=d.merchandise_description
-		e.warehouse=d.merchandise_warehouse
+		e.warehouse = frappe.db.get_value('Branch', d.merchandise_branch, 'warehouse')
 		e.income_account=d.merchandise_income_account
 		e.cost_center=d.merchandise_cost_center
 		e.batch_no=d.merchandise_batch_no
@@ -138,7 +138,7 @@ def get_item_details(doc, item):
 			d.tailoring_description = frappe.db.get_value('Item', item, 'description')
 			d.tailoring_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.tailoring_rate = frappe.db.get_value('Item Price',{'price_list':d.tailoring_price_list,'item_code':item},'price_list_rate')
-			d.tailoring_warehouse = frappe.db.get_value('Item', item, 'default_warehouse')
+			d.tailoring_branch = frappe.db.get_value('Item', item, 'default_branch')
 	return "Done"
 
 def get_merchandise_item_details(doc, item):
@@ -148,7 +148,7 @@ def get_merchandise_item_details(doc, item):
 			d.merchandise_description = frappe.db.get_value('Item', item, 'description')
 			d.merchandise_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.merchandise_rate = frappe.db.get_value('Item Price',{'price_list':d.merchandise_price_list,'item_code':item},'price_list_rate')
-			d.merchandise_warehouse = frappe.db.get_value('Item', item, 'default_warehouse')
+			d.merchandise_branch = frappe.db.get_value('Item', item, 'default_branch')
 	return "Done"
 
 @frappe.whitelist()

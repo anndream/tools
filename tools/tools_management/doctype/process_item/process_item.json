@@ -68,6 +68,7 @@
    "description": "List of Branches which support the process", 
    "fieldname": "branch_list", 
    "fieldtype": "Small Text", 
+   "in_list_view": 1, 
    "label": "Branch List", 
    "permlevel": 0, 
    "precision": ""
@@ -75,7 +76,7 @@
   {
    "fieldname": "branch_dict", 
    "fieldtype": "Small Text", 
-   "hidden": 0, 
+   "hidden": 1, 
    "label": "branch_dict", 
    "no_copy": 1, 
    "permlevel": 0, 
@@ -99,7 +100,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-10-22 15:21:37.803083", 
+ "modified": "2014-11-01 22:45:34.470523", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Process Item", 

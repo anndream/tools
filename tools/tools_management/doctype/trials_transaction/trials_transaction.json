@@ -64,7 +64,7 @@
    "fieldtype": "Select", 
    "in_list_view": 1, 
    "label": "Status", 
-   "options": "\nPending\nCompleted", 
+   "options": "\nPending\nOpen\nClosed", 
    "permlevel": 0, 
    "precision": ""
   }, 
@@ -114,6 +114,15 @@
    "options": "Stock Entry", 
    "permlevel": 0, 
    "precision": ""
+  }, 
+  {
+   "default": "No", 
+   "fieldname": "trial_change_status", 
+   "fieldtype": "Select", 
+   "label": "trial_change_status", 
+   "options": "\nYes\nNo", 
+   "permlevel": 0, 
+   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -123,7 +132,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2014-10-20 19:18:42.736095", 
+ "modified": "2014-10-27 22:34:00.651987", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Trials Transaction", 
