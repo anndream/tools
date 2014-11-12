@@ -13,11 +13,6 @@ def get_style(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql("""select distinct style 
 		from `tabStyle Item` where parent='%s'"""%(filters.get('item_code')))
 
-def branch_validation(doc, method):
-	br = frappe.db.sql("select name from `tabBranch` where warehouse='%s' or cost_center='%s'"%(doc.warehouse, doc.cost_center),as_list=1)
-	if br:
-		frappe.throw(_("Branch or Warehouse already assigned to Branch '{0}'").format(br[0][0]))
-
 def branches_creation(doc, method):
 	if frappe.db.get_value('Branches', doc.branch, 'name') != doc.branch:
 		br = frappe.new_doc('Branches')
@@ -74,8 +69,10 @@ def merge_tailoring_items(doc,method):
 		e.barcode=d.tailoring_barcode
 		e.item_code=d.tailoring_item_code
 		e.item_name=d.tailoring_item_name
+		e.item_group = frappe.db.get_value('Item', d.tailoring_item_code, 'item_group')
 		e.work_order=d.tailoring_work_order
 		e.description=d.tailoring_description
+		e.sales_invoice_branch = d.tailoring_branch
 		e.warehouse= frappe.db.get_value('Branch', d.tailoring_branch, 'warehouse')
 		e.income_account=d.tailoring_income_account
 		e.cost_center=d.tailoring_cost_center
@@ -111,8 +108,10 @@ def merge_merchandise_items(doc):
 		e.barcode=d.merchandise_barcode
 		e.item_code=d.merchandise_item_code
 		e.item_name=d.merchandise_item_name
+		e.item_group = frappe.db.get_value('Item', d.merchandise_item_code, 'item_group')
 		e.work_order=d.merchandise_work_order
 		e.description=d.merchandise_description
+		e.sales_invoice_branch = d.merchandise_branch
 		e.warehouse = frappe.db.get_value('Branch', d.merchandise_branch, 'warehouse')
 		e.income_account=d.merchandise_income_account
 		e.cost_center=d.merchandise_cost_center
@@ -153,13 +152,16 @@ def get_merchandise_item_details(doc, item):
 
 @frappe.whitelist()
 def get_styles_details(item, style):
-	return frappe.db.sql("""select name,  image_viewer,default_value, abbreviation,
-	cost_to_customer, cost_to_tailor from `tabStyle Item`
+	return frappe.db.sql("""select name,  ifnull(image_viewer, ''), ifnull(default_value,''), ifnull(abbreviation,''),
+	ifnull(cost_to_customer,0.00), ifnull(cost_to_tailor,'') from `tabStyle Item`
 		where parent='%s' and style='%s'"""%(item, style),as_list=1)
 
 @frappe.whitelist()
 def get_warehouse_wise_stock_balance(item, qty):
-	return frappe.db.sql("""select actual_qty, warehouse from `tabStock Ledger Entry` where item_code = '%s' and actual_qty >= %s"""%(item, qty), as_list=1)
+	return frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
+			where sle.item_code = '%s' 
+				and sle.actual_qty >= %s 
+				and b.warehouse = sle.warehouse"""%(item, qty), as_list=1, debug=1)
 
 def update_work_order(doc, method):
 	frappe.db.sql(""" update `tabWork Order` set sales_invoice_no = '%(sales_invoice_no)s' 
@@ -175,10 +177,8 @@ def create_se_or_mr(doc, method):
 			for item_details in fabric_details[warehouse]:
 				proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
 				if proc_warehouse == user_warehouse:
-					frappe.errprint("proc_warehouse and user warehouse are same")
 					make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 				else:
-					frappe.errprint("create material_request")
 					make_material_request(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 def get_actual_fabrc_warehouse(si, item):

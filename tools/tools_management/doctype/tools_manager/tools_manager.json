@@ -1,0 +1,108 @@
+{
+ "allow_copy": 0, 
+ "allow_import": 0, 
+ "allow_rename": 0, 
+ "creation": "2014-09-19 12:04:10.853035", 
+ "custom": 0, 
+ "docstatus": 0, 
+ "doctype": "DocType", 
+ "document_type": "", 
+ "fields": [
+  {
+   "fieldname": "company", 
+   "fieldtype": "Link", 
+   "in_list_view": 1, 
+   "label": "Company", 
+   "options": "Company", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "posting_date", 
+   "fieldtype": "Date", 
+   "label": "Date", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "posting_time", 
+   "fieldtype": "Time", 
+   "label": "Time", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "fiscal_year", 
+   "fieldtype": "Link", 
+   "label": "Fiscal year", 
+   "options": "Fiscal Year", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "tools_info", 
+   "fieldtype": "Section Break", 
+   "in_list_view": 0, 
+   "label": "Tools Information", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "tools_information", 
+   "fieldtype": "Table", 
+   "label": "Tools Information", 
+   "options": "Allocated Tools", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "allocate_tools", 
+   "fieldtype": "Button", 
+   "label": "Allocate Tools", 
+   "options": "allocate_tools1", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "tools_maintainance", 
+   "fieldtype": "Section Break", 
+   "label": "Tools Maintainance", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "tool_maintainance", 
+   "fieldtype": "Data", 
+   "label": "Tool Maintainance", 
+   "options": "", 
+   "permlevel": 0, 
+   "precision": ""
+  }
+ ], 
+ "hide_heading": 0, 
+ "hide_toolbar": 0, 
+ "in_create": 0, 
+ "in_dialog": 0, 
+ "is_submittable": 0, 
+ "issingle": 1, 
+ "istable": 0, 
+ "modified": "2014-11-04 12:11:13.505163", 
+ "modified_by": "Administrator", 
+ "module": "Tools Management", 
+ "name": "Tools Manager", 
+ "name_case": "", 
+ "owner": "Administrator", 
+ "permissions": [
+  {
+   "apply_user_permissions": 0, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "All", 
+   "write": 1
+  }
+ ], 
+ "read_only": 0, 
+ "read_only_onload": 0, 
+ "sort_field": "modified", 
+ "sort_order": "DESC"
+}
