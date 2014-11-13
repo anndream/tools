@@ -158,10 +158,11 @@ def get_styles_details(item, style):
 
 @frappe.whitelist()
 def get_warehouse_wise_stock_balance(item, qty):
-	return frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
-			where sle.item_code = '%s' 
-				and sle.actual_qty >= %s 
-				and b.warehouse = sle.warehouse"""%(item, qty), as_list=1, debug=1)
+	if item and qty:
+		return frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
+				where sle.item_code = '%s' 
+					and sle.actual_qty >= %s 
+					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1, debug=1)
 
 def update_work_order(doc, method):
 	frappe.db.sql(""" update `tabWork Order` set sales_invoice_no = '%(sales_invoice_no)s' 

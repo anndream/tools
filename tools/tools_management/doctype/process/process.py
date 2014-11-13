@@ -6,4 +6,6 @@ import frappe
 from frappe.model.document import Document
 
 class Process(Document):
-	pass
+	def on_update(self):
+		pass
+		
