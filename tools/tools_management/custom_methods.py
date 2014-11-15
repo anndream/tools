@@ -171,30 +171,41 @@ def update_work_order(doc, method):
 				where parent = '%(sales_invoice_no)s') """%{'sales_invoice_no':doc.name})
 
 def create_se_or_mr(doc, method):
+	frappe.errprint(doc.fabric_details)
 	if doc.fabric_details:
 		fabric_details = eval(doc.fabric_details)
-		user_warehouse = get_user_warehouse()
-		for warehouse in fabric_details:
-			for item_details in fabric_details[warehouse]:
-				proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
-				if proc_warehouse == user_warehouse:
-					make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
-				else:
-					make_material_request(proc_warehouse, warehouse, item_details[0], item_details[1])
+		user_warehouse = get_user_branch()
+		frappe.errprint(fabric_details)
+		for item in fabric_details:
+			warehouse_details = eval(fabric_details.get(item))
+			for warehouse in warehouse_details:
+				for item_details in warehouse_details[warehouse]:
+					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
+					if proc_warehouse == warehouse and user_warehouse == warehouse:
+						make_cut_order(1, doc, proc_warehouse, warehouse, item_details)
+						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+
+					if proc_warehouse != warehouse and user_warehouse == warehouse:
+						make_cut_order(2, doc, proc_warehouse, warehouse, item_details)
+						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+
+					if proc_warehouse != warehouse and user_warehouse != warehouse:
+						make_material_request(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 def get_actual_fabrc_warehouse(si, item):
 	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
 						where sales_invoice_no = '%s' and item_code = '%s') 
-					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1)
+					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1, debug=1)
 
 	return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None
 
-def get_user_warehouse():
-	ret = frappe.db.sql(""" select warehouse from tabBranch b, tabUser u 
-		where b.name = u.branch and u.name = '%s' """%(frappe.session.user), as_list=1)
+def get_user_branch():
+	return frappe.db.get_value("User", frappe.session.user, "branch")
+	# ret = frappe.db.sql(""" select warehouse from tabBranch b, tabUser u 
+	# 	where b.name = u.branch and u.name = '%s' """%(frappe.session.user), as_list=1)
 
-	return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None	
+	# return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None	
 
 def make_stock_transfer(proc_warehouse, warehouse, fabric, qty):
 	fab_details = get_fabric_details(fabric)
@@ -240,8 +251,10 @@ def make_material_request(proc_warehouse, warehouse, fabric, qty):
 	# mrq.branch = frappe.db.get_value('User', frappe.session.use, 'branch')
 	
 	mrqd = mrq.append('indent_details', {})
-	mrqd.warehouse = proc_warehouse
-	mrqd.from_warehouse = warehouse
+	mrqd.for_branch = proc_warehouse 
+	mrqd.from_branch = warehouse
+	mrqd.warehouse = get_warehouse(proc_warehouse)
+	mrqd.from_warehouse = get_warehouse(warehouse)
 	mrqd.item_code = fabric
 	mrqd.item_name = fab_details.get('item_name')
 	mrqd.description = fab_details.get('description')
@@ -250,3 +263,17 @@ def make_material_request(proc_warehouse, warehouse, fabric, qty):
 	mrqd.schedule_date = add_days(nowdate(), 2)
 
 	mrq.save()
+
+def get_warehouse(branch):
+	return frappe.db.get_value('Branches', branch, 'warehouse')
+
+def make_cut_order(id, doc, proc_warehouse, warehouse, item_details):
+	frappe.errprint([id,"test"])
+	co = frappe.new_doc("Cut Order")
+	co.invoice_no = doc.name
+	co.article_code = item_details[2]
+	co.fabric_code = item_details[0]
+	co.qty = item_details[1]
+	co.actual_site = proc_warehouse
+	co.fabric_site = warehouse
+	co.save()
