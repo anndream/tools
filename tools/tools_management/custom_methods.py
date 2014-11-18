@@ -158,11 +158,27 @@ def get_styles_details(item, style):
 
 @frappe.whitelist()
 def get_warehouse_wise_stock_balance(item, qty):
+	fab_qty = []
 	if item and qty:
-		return frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
+		actual_qty = frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
 				where sle.item_code = '%s' 
 					and sle.actual_qty >= %s 
-					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1, debug=1)
+					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1)
+
+		co_qty = frappe.db.sql(""" select b.name, sum(co.qty) from `tabCut Order` co, `tabBranch` b  
+       			where co.fabric_code = '%s' 
+       				and co.fabric_site = b.name 
+       			group by b.name"""%item, as_list=1)
+
+		if len(actual_qty)>0 and len(co_qty) > 0:
+			for qty_detail in actual_qty:
+				for co_detail in co_qty:
+					if qty_detail[2] == co_detail[0]:
+						if (flt(qty_detail[1]) - flt(co_detail[1])) > 0:
+							fab_qty.append([ qty_detail[0], flt(qty_detail[1]) - flt(co_detail[1]), qty_detail[2]])
+						actual_qty.remove(qty_detail)
+		fab_qty.extend(actual_qty)
+		return fab_qty
 
 def update_work_order(doc, method):
 	frappe.db.sql(""" update `tabWork Order` set sales_invoice_no = '%(sales_invoice_no)s' 
@@ -181,6 +197,7 @@ def create_se_or_mr(doc, method):
 			for warehouse in warehouse_details:
 				for item_details in warehouse_details[warehouse]:
 					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
+					frappe.errprint([proc_warehouse, warehouse, user_warehouse])
 					if proc_warehouse == warehouse and user_warehouse == warehouse:
 						make_cut_order(1, doc, proc_warehouse, warehouse, item_details)
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
@@ -190,7 +207,7 @@ def create_se_or_mr(doc, method):
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 					if proc_warehouse != warehouse and user_warehouse != warehouse:
-						make_material_request(proc_warehouse, warehouse, item_details[0], item_details[1])
+						make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
 
 def get_actual_fabrc_warehouse(si, item):
 	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
@@ -219,8 +236,8 @@ def make_stock_transfer(proc_warehouse, warehouse, fabric, qty):
 	se.posting_time = nowtime().split('.')[0]
 	
 	sed = se.append('mtn_details', {})
-	sed.s_warehouse = warehouse
-	sed.target_branch = get_branch(proc_warehouse)
+	sed.s_warehouse = get_warehouse(warehouse)
+	sed.target_branch = proc_warehouse
 	sed.item_code = fabric
 	sed.item_name = fab_details.get('item_name')
 	sed.description = fab_details.get('description')
@@ -242,7 +259,7 @@ def get_fabric_details(fabric):
 def get_branch(proc_warehouse):
 	return frappe.db.get_value('Branch', {'warehouse': proc_warehouse}, 'name')
 
-def make_material_request(proc_warehouse, warehouse, fabric, qty):
+def make_material_request(si_no, proc_warehouse, warehouse, fabric, qty):
 	fab_details = get_fabric_details(fabric)
 	
 	mrq = frappe.new_doc('Material Request')
@@ -251,6 +268,7 @@ def make_material_request(proc_warehouse, warehouse, fabric, qty):
 	# mrq.branch = frappe.db.get_value('User', frappe.session.use, 'branch')
 	
 	mrqd = mrq.append('indent_details', {})
+	mrqd.invoice_no = si_no
 	mrqd.for_branch = proc_warehouse 
 	mrqd.from_branch = warehouse
 	mrqd.warehouse = get_warehouse(proc_warehouse)
@@ -262,18 +280,34 @@ def make_material_request(proc_warehouse, warehouse, fabric, qty):
 	mrqd.uom = fab_details.get('stock_uom')
 	mrqd.schedule_date = add_days(nowdate(), 2)
 
-	mrq.save()
+	mrq.save(ignore_permissions=True)
 
 def get_warehouse(branch):
 	return frappe.db.get_value('Branches', branch, 'warehouse')
 
-def make_cut_order(id, doc, proc_warehouse, warehouse, item_details):
+def make_cut_order(id, doc, proc_warehouse, warehouse, item_details, mr_view=None):
 	frappe.errprint([id,"test"])
 	co = frappe.new_doc("Cut Order")
-	co.invoice_no = doc.name
+	co.invoice_no = doc.get('name')
 	co.article_code = item_details[2]
 	co.fabric_code = item_details[0]
 	co.qty = item_details[1]
 	co.actual_site = proc_warehouse
 	co.fabric_site = warehouse
-	co.save()
+	if mr_view:
+		co.submit()
+	else:
+		co.save()
+
+def get_branch_of_process(doctype, txt, searchfield, start, page_len, filters):
+	branch = []
+	try:
+		data = frappe.db.sql(""" Select branch_list from `tabProcess Item` where 
+			process_name = '%s' and parent ='%s'"""%(filters.get('process'), filters.get('item_code')), as_list=1)
+		for s in data:
+			serial = (s[0]).split('\n')
+			for sn in serial:
+				branch.append([sn])
+		return branch
+	except Exception:
+		return frappe.db.sql("select name from `tabBranch`")
