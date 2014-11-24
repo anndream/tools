@@ -13,12 +13,23 @@ def get_style(doctype, txt, searchfield, start, page_len, filters):
 	return frappe.db.sql("""select distinct style 
 		from `tabStyle Item` where parent='%s'"""%(filters.get('item_code')))
 
-def branches_creation(doc, method):
+def branch_methods(doc, method):
+	branches_creation(doc)
+	# territory_creation(doc)
+
+def branches_creation(doc):
 	if frappe.db.get_value('Branches', doc.branch, 'name') != doc.branch:
 		br = frappe.new_doc('Branches')
 		br.branch_name = doc.branch
 		br.warehouse = doc.warehouse
 		br.save(ignore_permissions=True)
+
+def territory_creation(doc):
+	if frappe.db.get_value('Territory', doc.branch, 'name')!= doc.branch:
+		br = frappe.new_doc('Territory')
+		br.territory_name = doc.branch
+		br.is_group = 'No'
+		br.save(ignore_permissions=True)		
 
 def sales_invoice_on_submit_methods(doc, method):
 	generate_project_aginst_si(doc, method)
@@ -303,11 +314,25 @@ def get_branch_of_process(doctype, txt, searchfield, start, page_len, filters):
 	branch = []
 	try:
 		data = frappe.db.sql(""" Select branch_list from `tabProcess Item` where 
-			process_name = '%s' and parent ='%s'"""%(filters.get('process'), filters.get('item_code')), as_list=1)
-		for s in data:
-			serial = (s[0]).split('\n')
-			for sn in serial:
-				branch.append([sn])
-		return branch
+			process_name = '%s' and parent ='%s'"""%(filters.get('process'), filters.get('item_code')), as_list=1, debug=1)
+		if data:
+			for s in data:
+				serial = (s[0]).split('\n')
+				for sn in serial:
+					branch.append([sn])
+			return branch
+		else:
+			return frappe.db.sql("select name from `tabBranch`")
 	except Exception:
 		return frappe.db.sql("select name from `tabBranch`")
+
+def get_serial_no(doctype, txt, searchfield, start, page_len, filters):
+	serial_no =[]
+	try:
+		if filters.get('serial_no'):
+			sn = cstr(filters.get('serial_no')).split('\n')
+			for s in sn:
+				serial_no.append([s])
+			return serial_no
+	except Exception:
+		return frappe.db.sql("select name from `tabSerial No`")
