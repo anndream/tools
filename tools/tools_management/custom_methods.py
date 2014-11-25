@@ -328,6 +328,7 @@ def get_branch_of_process(doctype, txt, searchfield, start, page_len, filters):
 
 def get_serial_no(doctype, txt, searchfield, start, page_len, filters):
 	serial_no =[]
+	frappe.errprint(filters.get('serial_no'))
 	try:
 		if filters.get('serial_no'):
 			sn = cstr(filters.get('serial_no')).split('\n')
