@@ -33,3 +33,11 @@ def generate_barcode(code, docname):
 		ean = EAN(code)
 		fullname = ean.save(filpath)
 	return fullname or None
+
+def update_serial_no(parent, serial_no, msg):
+	frappe.db.sql("""update `tabProduction Status Detail`
+		set msg='%s' where parent = '%s' and serial_no='%s'"""%(msg, parent, serial_no))
+
+def find_next_process(parent, process_name):
+	process = frappe.db.sql(""" select process_name from `tabProcess Log` 
+						where idx > (select max(idx) from `tabProcess Log` where parent = '%s' and process_name = '%s') and parent = '%s' limit 1"""%(parent, process_name, parent))

@@ -176,7 +176,7 @@ def get_warehouse_wise_stock_balance(item, qty):
 					and sle.actual_qty >= %s 
 					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1)
 
-		co_qty = frappe.db.sql(""" select b.name, sum(co.qty) from `tabCut Order` co, `tabBranch` b  
+		co_qty = frappe.db.sql(""" select fr.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
        			where co.fabric_code = '%s' 
        				and co.fabric_site = b.name 
        			group by b.name"""%item, as_list=1)
@@ -210,6 +210,28 @@ def create_se_or_mr(doc, method):
 					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
 					frappe.errprint([proc_warehouse, warehouse, user_warehouse])
 					if proc_warehouse == warehouse and user_warehouse == warehouse:
+						make_reserve_fabric_etry(1, doc, proc_warehouse, warehouse, item_details)
+						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+
+					if proc_warehouse != warehouse and user_warehouse == warehouse:
+						make_reserve_fabric_etry(2, doc, proc_warehouse, warehouse, item_details)
+						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+
+					if proc_warehouse != warehouse and user_warehouse != warehouse:
+						make_reserve_fabric_etry(doc.name, proc_warehouse, warehouse, item_details)
+
+def cut_order_generation(work_order, invoice_no):
+	item = get_wo_item(work_order)
+	if not check_cut_order_exist(invoice_no, item):
+		fabric_details = get_fabric_details(invoice_no)
+		user_warehouse = get_user_branch()
+		if fabric_details:
+			warehouse_details = eval(fabric_details.get(item))
+			for warehouse in warehouse_details:
+				for item_details in warehouse_details[warehouse]:
+					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
+					
+					if proc_warehouse == warehouse and user_warehouse == warehouse:
 						make_cut_order(1, doc, proc_warehouse, warehouse, item_details)
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
@@ -218,7 +240,22 @@ def create_se_or_mr(doc, method):
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 					if proc_warehouse != warehouse and user_warehouse != warehouse:
-						make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
+						# make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
+						make_cut_order(2, doc, proc_warehouse, warehouse, item_details)
+
+def get_wo_item(work_order):
+	return frappe.db.get_value('Work Order', work_order, 'item_code')
+
+def check_cut_order_exist(invoice_no, item_code):
+	return frappe.db.get_value('Cut Order', {'invoice_no': invoice_no, 'article_code': item_code}, 'name')
+
+def get_fabric_details(invoice_no):
+	fabric_details = frappe.db.get_value("Sales Invoice", invoice_no, 'fabric_details')
+
+	if fabric_details:
+		return eval(fabric_details)
+	
+	return None
 
 def get_actual_fabrc_warehouse(si, item):
 	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
@@ -299,6 +336,20 @@ def get_warehouse(branch):
 def make_cut_order(id, doc, proc_warehouse, warehouse, item_details, mr_view=None):
 	frappe.errprint([id,"test"])
 	co = frappe.new_doc("Cut Order")
+	co.invoice_no = doc.get('name')
+	co.article_code = item_details[2]
+	co.fabric_code = item_details[0]
+	co.qty = item_details[1]
+	co.actual_site = proc_warehouse
+	co.fabric_site = warehouse
+	if mr_view:
+		co.submit()
+	else:
+		co.save()
+
+def make_reserve_fabric_etry(id, doc, proc_warehouse, warehouse, item_details, mr_view=None):
+	frappe.errprint([id,"test"])
+	co = frappe.new_doc("Fabric Reserve")
 	co.invoice_no = doc.get('name')
 	co.article_code = item_details[2]
 	co.fabric_code = item_details[0]
