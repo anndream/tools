@@ -32,7 +32,25 @@
   {
    "fieldname": "trials", 
    "fieldtype": "Check", 
+   "in_list_view": 1, 
    "label": "Trials", 
+   "permlevel": 0, 
+   "precision": ""
+  }, 
+  {
+   "fieldname": "trials_qc", 
+   "fieldtype": "Check", 
+   "hidden": 1, 
+   "label": "Trials Qc", 
+   "permlevel": 0, 
+   "precision": "", 
+   "print_hide": 1, 
+   "report_hide": 1
+  }, 
+  {
+   "fieldname": "quality_check", 
+   "fieldtype": "Check", 
+   "label": "Quality Check", 
    "permlevel": 0, 
    "precision": ""
   }, 
@@ -52,6 +70,7 @@
   {
    "fieldname": "warehouse", 
    "fieldtype": "Link", 
+   "in_list_view": 1, 
    "label": "Branch", 
    "options": "Branch", 
    "permlevel": 0, 
@@ -76,7 +95,7 @@
   {
    "fieldname": "branch_dict", 
    "fieldtype": "Small Text", 
-   "hidden": 0, 
+   "hidden": 1, 
    "label": "branch_dict", 
    "no_copy": 1, 
    "permlevel": 0, 
@@ -84,13 +103,6 @@
    "print_hide": 1, 
    "read_only": 0, 
    "report_hide": 1
-  }, 
-  {
-   "fieldname": "amendment", 
-   "fieldtype": "Check", 
-   "label": "Amendment", 
-   "permlevel": 0, 
-   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -100,7 +112,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-11-26 15:46:13.277222", 
+ "modified": "2014-12-12 15:55:18.843177", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Process Item", 

@@ -177,8 +177,8 @@ def get_warehouse_wise_stock_balance(item, qty):
 					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1)
 
 		co_qty = frappe.db.sql(""" select fr.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
-       			where co.fabric_code = '%s' 
-       				and co.fabric_site = b.name 
+       			where fr.fabric_code = '%s' 
+       				and fr.fabric_site = b.name 
        			group by b.name"""%item, as_list=1)
 
 		if len(actual_qty)>0 and len(co_qty) > 0:
@@ -379,12 +379,29 @@ def get_branch_of_process(doctype, txt, searchfield, start, page_len, filters):
 
 def get_serial_no(doctype, txt, searchfield, start, page_len, filters):
 	serial_no =[]
-	frappe.errprint(filters.get('serial_no'))
+	txt = "%{}%".format(txt)
 	try:
 		if filters.get('serial_no'):
 			sn = cstr(filters.get('serial_no')).split('\n')
 			for s in sn:
 				serial_no.append([s])
 			return serial_no
+		else:
+			return frappe.db.sql("select name from `tabSerial No` where %s like '%s'"%(searchfield, txt))
 	except Exception:
-		return frappe.db.sql("select name from `tabSerial No`")
+		return frappe.db.sql("select name from `tabSerial No` where %s like '%s'"%(searchfield, txt))
+
+def get_process_details(doctype, txt, searchfield, start, page_len, filters):
+	obj = eval(filters.get('obj'))
+	obj_list = "','".join(obj)
+	if obj_list:
+		return frappe.db.sql("""select name from `tabProcess` where name in ('%s')"""%(obj_list))
+	else:
+		return frappe.db.sql("""select name from `tabProcess`""")
+
+def get_unfinished_process(doctype, txt, searchfield, start, page_len, filters):
+	cond = "1=1"
+	if filters.get('get_finished_list'):
+		cond = "name not in ('%s')"%(filters.get('get_finished_list'))
+	return frappe.db.sql("""select distinct process_name from `tabProcess Item` 
+		where parent = '%s' and trials = 1 and %s"""%(filters.get('item_code'), cond))
