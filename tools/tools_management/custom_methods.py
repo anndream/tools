@@ -223,25 +223,25 @@ def create_se_or_mr(doc, method):
 def cut_order_generation(work_order, invoice_no):
 	item = get_wo_item(work_order)
 	if not check_cut_order_exist(invoice_no, item):
-		fabric_details = get_fabric_details(invoice_no)
+		fabric_details = get_fabric_info(invoice_no)
 		user_warehouse = get_user_branch()
 		if fabric_details:
 			warehouse_details = eval(fabric_details.get(item))
 			for warehouse in warehouse_details:
 				for item_details in warehouse_details[warehouse]:
-					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
+					proc_warehouse = get_actual_fabrc_warehouse(invoice_no, item_details[2])
 					
 					if proc_warehouse == warehouse and user_warehouse == warehouse:
-						make_cut_order(1, doc, proc_warehouse, warehouse, item_details)
+						make_cut_order(1, invoice_no, proc_warehouse, warehouse, item_details)
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 					if proc_warehouse != warehouse and user_warehouse == warehouse:
-						make_cut_order(2, doc, proc_warehouse, warehouse, item_details)
+						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
 					if proc_warehouse != warehouse and user_warehouse != warehouse:
 						# make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
-						make_cut_order(2, doc, proc_warehouse, warehouse, item_details)
+						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)
 
 def get_wo_item(work_order):
 	return frappe.db.get_value('Work Order', work_order, 'item_code')
@@ -249,7 +249,8 @@ def get_wo_item(work_order):
 def check_cut_order_exist(invoice_no, item_code):
 	return frappe.db.get_value('Cut Order', {'invoice_no': invoice_no, 'article_code': item_code}, 'name')
 
-def get_fabric_details(invoice_no):
+def get_fabric_info(invoice_no):
+	frappe.errprint(invoice_no)
 	fabric_details = frappe.db.get_value("Sales Invoice", invoice_no, 'fabric_details')
 
 	if fabric_details:
@@ -333,10 +334,9 @@ def make_material_request(si_no, proc_warehouse, warehouse, fabric, qty):
 def get_warehouse(branch):
 	return frappe.db.get_value('Branches', branch, 'warehouse')
 
-def make_cut_order(id, doc, proc_warehouse, warehouse, item_details, mr_view=None):
-	frappe.errprint([id,"test"])
+def make_cut_order(id, invoice_no, proc_warehouse, warehouse, item_details, mr_view=None):
 	co = frappe.new_doc("Cut Order")
-	co.invoice_no = doc.get('name')
+	co.invoice_no = invoice_no
 	co.article_code = item_details[2]
 	co.fabric_code = item_details[0]
 	co.qty = item_details[1]

@@ -10,6 +10,11 @@ import re, urllib, datetime, math
 import babel.dates
 import barcode
 import os
+import qrcode
+import qrcode.image.pil
+import qrcode.image.svg
+import qrcode
+import unidecode
 
 def get_user_branch():
 	return frappe.db.get_value('User', frappe.session.user, 'branch')
@@ -20,19 +25,53 @@ def get_branch_warehouse(branch):
 def get_branch_cost_center(branch):
 	return frappe.db.get_value('Branch', branch, 'cost_center')
 
-def generate_barcode(code, docname):
-	path = os.path.abspath(os.path.join('.','bench_smart', 'public', 'files'))
-	directory = '%s/%s'%(path, docname)
+
+def gererate_QRcode(code, docname):
+	site_name = get_site_name()
+	path = os.path.abspath(os.path.join('.',site_name, 'public', 'files','QRCode'))
+	directory = '/%s/%s/'%(path,docname)
+		
 	if not os.path.exists(directory):
+		
 		os.makedirs(directory)
+		
 
 	if directory:
-		filpath = directory + '/' + code
+		code1=code.replace("/","-")
+		filpath = directory + code1
+		qr = qrcode.QRCode(  version=1,
+    		error_correction=qrcode.constants.ERROR_CORRECT_L,
+    		box_size=3,
+   		 	border=2);
+		qr.make(fit=True);		
+		img= qr.make_image()
+		
+		fulname=img.save(filpath+".png")			
+	return fulname or None	
+
+
+
+			
+def generate_barcode(code, docname):
+	site_name = get_site_name()
+	path = os.path.abspath(os.path.join('.',site_name, 'public', 'files','Barcode'))
+	directory = '/%s/%s/'%(path,docname)
+		
+
+	if not os.path.exists(directory):		
+		os.makedirs(directory)
+		
+
+	if directory:
+		code1=code.replace("/","-")
+		filpath = directory + code1
+
 		barcode.PROVIDED_BARCODES
-		EAN = barcode.get_barcode_class('Code39')
-		ean = EAN(code)
+		EAN = barcode.get_barcode_class('Code39')	
+		ean = EAN(code)	
 		fullname = ean.save(filpath)
-	return fullname or None
+		return code1 or None
+
 
 def update_serial_no(parent, serial_no, msg):
 	frappe.db.sql("""update `tabProduction Status Detail`
@@ -47,3 +86,6 @@ def find_next_process(parent, process_name, trials):
 	if process:
 		for r in process:
 			return r
+
+def get_site_name():
+	return frappe.local.site_path.split('/')[1]			
