@@ -10,6 +10,7 @@ def get_data():
 					"type": "doctype",
 					"label": _("Cashier Dashboard"),
 					"name": "Cashier Dashboard",
+					"icon": "icon-dashboard",
 					"description": _("Cashier Dashboard"),
 				},
 				{
@@ -41,7 +42,7 @@ def get_data():
 
 		{
 			"label": _("Reports"),
-			"icon": "icon-star",
+			"icon": "icon-list",
 			"items": [
 					{
 					"type": "report",

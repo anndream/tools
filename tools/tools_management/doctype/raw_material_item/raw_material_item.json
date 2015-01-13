@@ -55,6 +55,14 @@
    "label": "Qty", 
    "permlevel": 0, 
    "precision": "2"
+  }, 
+  {
+   "fieldname": "uom", 
+   "fieldtype": "Link", 
+   "label": "UOM", 
+   "options": "UOM", 
+   "permlevel": 0, 
+   "precision": ""
   }
  ], 
  "hide_heading": 0, 
@@ -64,7 +72,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2014-10-22 12:17:03.414453", 
+ "modified": "2015-01-13 20:08:10.183653", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Raw Material Item", 
