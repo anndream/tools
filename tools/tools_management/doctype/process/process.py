@@ -7,5 +7,7 @@ from frappe.model.document import Document
 
 class Process(Document):
 	def on_update(self):
-		pass
-		
+		if not frappe.db.get_value('Activity Type',self.process_name, 'name'):
+			s = frappe.new_doc('Activity Type')
+			s.activity_type = self.process_name
+			s.save(ignore_permissions= True)

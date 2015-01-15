@@ -21,6 +21,7 @@ def get_data():
 					"type": "doctype",
 					"name": "Tool Maintenance",
 					"label": _("Tool Maintenance"),
+					"icon" : "icon-wrench",
 					"description": _("Tool Maintenance"),
 				},
 			]
