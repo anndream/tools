@@ -1,6 +1,6 @@
 {
  "allow_copy": 0, 
- "allow_import": 0, 
+ "allow_import": 1, 
  "allow_rename": 0, 
  "autoname": "field:template_name", 
  "creation": "2014-09-10 13:25:07.124050", 
@@ -57,7 +57,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-12-29 14:24:56.127192", 
+ "modified": "2015-01-16 22:29:09.595821", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Measurement Template", 
@@ -86,6 +86,14 @@
    "permlevel": 0, 
    "read": 1, 
    "role": "All"
+  }, 
+  {
+   "create": 1, 
+   "delete": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "System Manager", 
+   "write": 1
   }
  ], 
  "read_only": 0, 

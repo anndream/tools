@@ -57,7 +57,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-12-29 14:22:35.938488", 
+ "modified": "2015-01-16 22:28:40.593664", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Measurement Formula", 
@@ -86,6 +86,14 @@
    "permlevel": 0, 
    "read": 1, 
    "role": "All"
+  }, 
+  {
+   "create": 1, 
+   "delete": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "System Manager", 
+   "write": 1
   }
  ], 
  "read_only": 0, 
