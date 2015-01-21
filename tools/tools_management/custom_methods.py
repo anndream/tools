@@ -172,11 +172,10 @@ def get_warehouse_wise_stock_balance(item, qty):
 	fab_qty = []
 	if item and qty:
 		actual_qty = frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
-				where sle.item_code = '%s' 
-					and sle.actual_qty >= %s 
+				where sle.item_code = '%s'
 					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1)
 
-		co_qty = frappe.db.sql(""" select fr.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
+		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
        			where fr.fabric_code = '%s' 
        				and fr.fabric_site = b.name 
        			group by b.name"""%item, as_list=1)
@@ -198,15 +197,14 @@ def update_work_order(doc, method):
 				where parent = '%(sales_invoice_no)s') """%{'sales_invoice_no':doc.name})
 
 def create_se_or_mr(doc, method):
-	frappe.errprint(doc.fabric_details)
+	import json
 	if doc.fabric_details:
-		fabric_details = eval(doc.fabric_details)
+		fabric_details = json.loads(doc.fabric_details)
 		user_warehouse = get_user_branch()
-		frappe.errprint(fabric_details)
 		for item in fabric_details:
-			warehouse_details = eval(fabric_details.get(item))
-			for warehouse in warehouse_details:
-				for item_details in warehouse_details[warehouse]:
+			warehouse_details = fabric_details.get(item)
+			for warehouse in eval(warehouse_details):
+				for item_details in eval(warehouse_details)[warehouse]:
 					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
 					frappe.errprint([proc_warehouse, warehouse, user_warehouse])
 					if proc_warehouse == warehouse and user_warehouse == warehouse:
@@ -405,3 +403,46 @@ def get_unfinished_process(doctype, txt, searchfield, start, page_len, filters):
 		cond = "name not in ('%s')"%(filters.get('get_finished_list'))
 	return frappe.db.sql("""select distinct process_name from `tabProcess Item` 
 		where parent = '%s' and trials = 1 and %s"""%(filters.get('item_code'), cond))
+
+
+def validate_reserve_fabric(doc, method):
+	import json
+	data = json.loads(doc.fabric_details)
+	if data:
+		tailoring_data = doc.get('sales_invoice_items_one')
+		reserve_fab_list = []
+		if tailoring_data:
+			for s in data:
+				reserve_fab_list.append(s)
+			data_dict = reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data)
+			doc.fabric_details = json.dumps(data_dict)
+	return True
+
+def reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data):
+	import json
+	for args in tailoring_data:
+		if args.tailoring_item_code not in reserve_fab_list:
+			if args.fabric_code:
+				if args.fabric_qty:
+					qty = get_fabric_Available_qty(args.fabric_code, args.tailoring_item_code, args.fabric_qty)
+					data[args.tailoring_item_code] = json.dumps(qty)
+				else:
+					frappe.throw(_("Fabric qty is not selected for item {0}").format(args.tailoring_item_code))	
+			else:
+				frappe.throw(_("Fabric is not selected for item {0}").format(args.tailoring_item_code))
+	return data
+
+def get_fabric_Available_qty(fabric_code, item_code, fab_qty):
+	warehouse= get_branch_warehouse(get_user_branch())
+	inner_list ={}
+	qty_data = frappe.db.sql(""" select item_code, %s as qty from `tabBin`
+		where item_code = '%s' and warehouse='%s' and actual_qty>=%s"""%(fab_qty, fabric_code, warehouse, fab_qty), as_list=1)
+	if qty_data:
+		qty_data[0].append(item_code)
+		inner_list[get_user_branch()] = qty_data
+		return inner_list
+	else:
+		frappe.throw(_("Fabric is not reserved for item {0}").format(item_code))
+
+def get_branch_warehouse(branch):
+	return frappe.db.get_value('Branch', branch, 'warehouse')
