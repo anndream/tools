@@ -173,7 +173,7 @@ def get_warehouse_wise_stock_balance(item, qty):
 	if item and qty:
 		actual_qty = frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
 				where sle.item_code = '%s'
-					and b.warehouse = sle.warehouse"""%(item, qty), as_list=1)
+					and b.warehouse = sle.warehouse"""%(item), as_list=1)
 
 		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
        			where fr.fabric_code = '%s' 

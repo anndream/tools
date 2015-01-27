@@ -1,0 +1,28 @@
+{
+ "content": null, 
+ "creation": "2015-01-23 23:28:17.449956", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "icon": "icon-search", 
+ "modified": "2015-01-23 23:31:54.726661", 
+ "modified_by": "Administrator", 
+ "module": "Tools Management", 
+ "name": "global-search", 
+ "owner": "Administrator", 
+ "page_name": "Global search", 
+ "roles": [
+  {
+   "role": "System Manager"
+  }, 
+  {
+   "role": "Sales User"
+  }, 
+  {
+   "role": "Sales Manager"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "title": "Global search"
+}
