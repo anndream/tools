@@ -171,14 +171,14 @@ def get_styles_details(item, style):
 def get_warehouse_wise_stock_balance(item, qty):
 	fab_qty = []
 	if item and qty:
-		actual_qty = frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabStock Ledger Entry` sle, `tabBranch` b 
+		actual_qty = frappe.db.sql("""select  sle.warehouse, sle.actual_qty, b.branch from `tabBin` sle, `tabBranch` b 
 				where sle.item_code = '%s'
 					and b.warehouse = sle.warehouse"""%(item), as_list=1)
 
-		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b  
-       			where fr.fabric_code = '%s' 
-       				and fr.fabric_site = b.name 
-       			group by b.name"""%item, as_list=1)
+		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b
+       			where fr.fabric_code = '%s'
+       				and fr.fabric_site = b.name
+      			group by b.name"""%item, as_list=1)
 
 		if len(actual_qty)>0 and len(co_qty) > 0:
 			for qty_detail in actual_qty:
