@@ -259,7 +259,7 @@ def get_fabric_info(invoice_no):
 def get_actual_fabrc_warehouse(si, item):
 	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
-						where sales_invoice_no = '%s' and item_code = '%s') 
+						where sales_invoice_no = '%s' and item_code = '%s' limit 1) 
 					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1, debug=1)
 
 	if ret:
@@ -268,7 +268,7 @@ def get_actual_fabrc_warehouse(si, item):
 	else:
 		data = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
-						where sales_invoice_no = '%s' and item_code = '%s') order by name desc limit 1"""%(si, item), as_list=1, debug=1)
+						where sales_invoice_no = '%s' and item_code = '%s' limit 1) order by name desc limit 1"""%(si, item), as_list=1, debug=1)
 		if data:
 			return data[0][0]
 
