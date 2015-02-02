@@ -177,7 +177,7 @@ def get_warehouse_wise_stock_balance(item, qty):
 
 		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b
        			where fr.fabric_code = '%s'
-       				and fr.fabric_site = b.name
+       				and fr.fabric_site = b.name and ifnull(fr.stock_entry_status , '') <> 'Completed'
       			group by b.name"""%item, as_list=1)
 
 		if len(actual_qty)>0 and len(co_qty) > 0:
@@ -262,7 +262,15 @@ def get_actual_fabrc_warehouse(si, item):
 						where sales_invoice_no = '%s' and item_code = '%s') 
 					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1, debug=1)
 
-	return ((len(ret[0]) > 1 ) and ret[0] or ret[0][0]) if ret else None
+	if ret:
+		return ret[0][0]
+	# Rohit Newly added Code
+	else:
+		data = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
+					where parent = ( select name from `tabWork Order` 
+						where sales_invoice_no = '%s' and item_code = '%s') order by name desc limit 1"""%(si, item), as_list=1, debug=1)
+		if data:
+			return data[0][0]
 
 def get_user_branch():
 	return frappe.db.get_value("User", frappe.session.user, "branch")
@@ -408,14 +416,14 @@ def get_unfinished_process(doctype, txt, searchfield, start, page_len, filters):
 def validate_reserve_fabric(doc, method):
 	import json
 	data = json.loads(doc.fabric_details)
-	if data:
-		tailoring_data = doc.get('sales_invoice_items_one')
-		reserve_fab_list = []
-		if tailoring_data:
-			for s in data:
-				reserve_fab_list.append(s)
-			data_dict = reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data)
-			doc.fabric_details = json.dumps(data_dict)
+	# if data:
+	tailoring_data = doc.get('sales_invoice_items_one')
+	reserve_fab_list = []
+	if tailoring_data:
+		for s in data:
+			reserve_fab_list.append(s)
+		data_dict = reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data)
+		doc.fabric_details = json.dumps(data_dict)
 	return True
 
 def reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data):
