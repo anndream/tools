@@ -82,7 +82,7 @@ def find_next_process(parent, process_name, trials):
 	if trials:
 		cond = "trials = '%s'"%(trials)
 	process = frappe.db.sql(""" select * from `tabProcess Log` 
-						where idx > (select max(idx) from `tabProcess Log` where parent = '%s' and process_name = '%s' and %s) and parent = '%s' order by idx limit 1"""%(parent, process_name, cond, parent), as_dict=1, debug=1)
+						where idx > (select max(idx) from `tabProcess Log` where parent = '%s' and process_name = '%s' and %s) and parent = '%s' order by idx limit 1"""%(parent, process_name, cond, parent), as_dict=1)
 	if process:
 		for r in process:
 			return r

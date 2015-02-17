@@ -206,7 +206,7 @@ def create_se_or_mr(doc, method):
 			for warehouse in eval(warehouse_details):
 				for item_details in eval(warehouse_details)[warehouse]:
 					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
-					frappe.errprint([proc_warehouse, warehouse, user_warehouse])
+					# frappe.errprint([proc_warehouse, warehouse, user_warehouse])
 					if proc_warehouse == warehouse and user_warehouse == warehouse:
 						make_reserve_fabric_etry(1, doc, proc_warehouse, warehouse, item_details)
 						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
@@ -248,7 +248,7 @@ def check_cut_order_exist(invoice_no, item_code):
 	return frappe.db.get_value('Cut Order', {'invoice_no': invoice_no, 'article_code': item_code}, 'name')
 
 def get_fabric_info(invoice_no):
-	frappe.errprint(invoice_no)
+	# frappe.errprint(invoice_no)
 	fabric_details = frappe.db.get_value("Sales Invoice", invoice_no, 'fabric_details')
 
 	if fabric_details:
@@ -260,7 +260,7 @@ def get_actual_fabrc_warehouse(si, item):
 	ret = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
 						where sales_invoice_no = '%s' and item_code = '%s' limit 1) 
-					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1, debug=1)
+					and ifnull(actual_fabric, 0) = 1"""%(si, item), as_list=1)
 
 	if ret:
 		return ret[0][0]
@@ -268,7 +268,7 @@ def get_actual_fabrc_warehouse(si, item):
 	else:
 		data = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
-						where sales_invoice_no = '%s' and item_code = '%s' limit 1) order by name desc limit 1"""%(si, item), as_list=1, debug=1)
+						where sales_invoice_no = '%s' and item_code = '%s' limit 1) order by name desc limit 1"""%(si, item), as_list=1)
 		if data:
 			return data[0][0]
 
@@ -354,7 +354,7 @@ def make_cut_order(id, invoice_no, proc_warehouse, warehouse, item_details, mr_v
 		co.save()
 
 def make_reserve_fabric_etry(id, doc, proc_warehouse, warehouse, item_details, mr_view=None):
-	frappe.errprint([id,"test"])
+	# frappe.errprint([id,"test"])
 	co = frappe.new_doc("Fabric Reserve")
 	co.invoice_no = doc.get('name')
 	co.article_code = item_details[2]
@@ -371,7 +371,7 @@ def get_branch_of_process(doctype, txt, searchfield, start, page_len, filters):
 	branch = []
 	try:
 		data = frappe.db.sql(""" Select branch_list from `tabProcess Item` where 
-			process_name = '%s' and parent ='%s'"""%(filters.get('process'), filters.get('item_code')), as_list=1, debug=1)
+			process_name = '%s' and parent ='%s'"""%(filters.get('process'), filters.get('item_code')), as_list=1)
 		if data:
 			for s in data:
 				serial = (s[0]).split('\n')
