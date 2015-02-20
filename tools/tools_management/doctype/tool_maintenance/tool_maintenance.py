@@ -59,9 +59,7 @@ class ToolMaintenance(Document):
 			se.serial_no=cstr(d['serial_no'])
 
 	def make_mat_receipt(self):
-		frappe.errprint("in the material Receipt")
 		fin_dict=self.make_dict()
-		frappe.errprint(fin_dict)
 		ste =frappe.new_doc("Stock Entry")
 		ste.set('mtn_details', [])
 		ste.purpose_type= "Material Receipt"

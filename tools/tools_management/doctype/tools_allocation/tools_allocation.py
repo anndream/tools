@@ -12,7 +12,6 @@ class ToolsAllocation(Document):
 			if d.status=='Assign':
 				serial_no_details=frappe.db.sql("select name from `tabAssigned Tools` where serial_no='%s'"%(d.serial_no),as_list=1)
 				if not serial_no_details:
-					frappe.errprint(d.item_code)
 					at = frappe.new_doc('Assigned Tools')
 					at.employee_name = d.employee_name
 					at.employee_code = d.employee_code
@@ -30,7 +29,6 @@ class ToolsAllocation(Document):
 				sr = frappe.get_doc("Serial No", d.serial_no)
 				sr.status = "Available"
 				sr.save()
-				frappe.errprint("Done")
 
 	def check_availabilty(self,data):
 		serial_no_details= frappe.db.sql("select name from `tabAssigned Tools` where serial_no='%s' and status='Assign'"%(data),as_list=1)
@@ -40,14 +38,12 @@ class ToolsAllocation(Document):
 			pass
 
 	def get_details(self,data):
-		frappe.errprint(data)
 		if data=='Pending':
 			self.set('tools_info', [])
 			tool_details= frappe.db.sql("""select employee_name,employee_code,item_code,item_name,name from 
 				`tabRequest Of Tools` where docstatus=1 and name not in(select tool_request from `tabAssigned Tools`) order by creation desc; """,as_list=1)
 			if tool_details:
 				for tool in tool_details:
-					frappe.errprint(tool[1])
 					e = self.append('tools_info', {})
 					e.employee_name = tool[0]
 					e.employee_code = tool[1]
@@ -57,7 +53,6 @@ class ToolsAllocation(Document):
 					e.status='Pending'
 					# e.serial_no=tool[5]
 		elif data=='Assign':
-			frappe.errprint("in the else")
 			self.set('tools_info', [])
 			tool_details= frappe.db.sql("""select employee_name,employee_code,item_code,
 				item_name,status,serial_no,tool_request from `tabAssigned Tools` where status='Assign'""",as_list=1)

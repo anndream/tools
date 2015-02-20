@@ -31,7 +31,6 @@ frappe.GlobalSearch =  Class.extend({
 	},
 	create_search_area: function(){
 		var me = this;
-		console.log($('#search_area'))
 		this.search_str = frappe.ui.form.make_control({
 				df: {
 					"fieldtype": 'Data',
@@ -47,7 +46,6 @@ frappe.GlobalSearch =  Class.extend({
 	},
 	get_reult: function(){
 		var me = this;
-		console.log('da')
 		frappe.call({
 			method:"tools.tools_management.page.global_search.global_search.get_result_set",
 			args:{'search_string': me.search_str.$input.val()},
@@ -98,7 +96,6 @@ frappe.GlobalSearch =  Class.extend({
 		$('#'+div_id).empty();
 		var prev = 0;
 		var next = 5;
-		console.log(this.table)
 		this.div_dict[div_id] = $("<table class='table table-bordered'>\
 			<thead><tr></tr></thead>\
 			<tbody></tbody>\
@@ -112,7 +109,6 @@ frappe.GlobalSearch =  Class.extend({
 					me.render_next_results_set($(this), div_id)
 				});
 		});
-		console.log([prev,next,data.slice(prev,next)])
 		this.render_result(data.slice(prev,next), prev, next, div_id)
 	},
 	render_result: function(data, prev, next, div_id){
@@ -126,12 +122,10 @@ frappe.GlobalSearch =  Class.extend({
 			me.pos_dict[div_id]['prev'] = prev;
 			me.pos_dict[div_id]['next'] = next;
 		});
-		console.log(me.pos_dict)
 	},
 	render_next_results_set: function(btn, div_id){
 		var me = this;
 		div_id = btn[0].id.split('_')[0]
-		console.log(this)
 		this.div_dict[div_id].find("tbody").empty()
 		prev = me.pos_dict[div_id]['prev']
 		next = me.pos_dict[div_id]['next']
@@ -142,7 +136,6 @@ frappe.GlobalSearch =  Class.extend({
 		}
 		if(btn[0].innerText == '>'){
 			if(next!=this.data.length){
-				console.log(me.pos_dict)
 				this.render_result(this.data[div_id].slice(prev+5,next+5), prev+5, next+5, div_id)
 			}
 		}

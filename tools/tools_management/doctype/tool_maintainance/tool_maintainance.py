@@ -29,18 +29,15 @@ class ToolMaintainance(Document):
 		self.update_stock(st,fin_dict['Out'])
 		st.docstatus=0
 		st.save(ignore_permissions=True)
-		frappe.errprint("Done")
 
 	def make_mat_receipt(self):
 		fin_dict=self.make_dict()
-		frappe.errprint(fin_dict)
 		st =frappe.new_doc("Stock Entry")
 		st.set('mtn_details', [])
 		st.purpose="Material Receipt"
 		self.update_stock_for_receipt(st,fin_dict['In'])
 		st.docstatus=0
 		st.save(ignore_permissions=True)
-		frappe.errprint("Done")	
 
 	def update_stock(self,st,fin_dict):
 		for d in fin_dict:

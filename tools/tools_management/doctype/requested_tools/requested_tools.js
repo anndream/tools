@@ -6,5 +6,4 @@
 // 	var d = locals[cdt][cdn];
 // 	d.serial_nos=d.serial_no;
 // 	refresh_field("tools_info");
-// 	// console.log(".item_code") 
 // }

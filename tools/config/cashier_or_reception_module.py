@@ -15,6 +15,12 @@ def get_data():
 				},
 				{
 					"type": "doctype",
+					"name": "Cut Order Dashboard",
+					"label": _("Cut Order Dashboard"),
+					"description": _("Cut Order Dashboard"),
+				},
+				{
+					"type": "doctype",
 					"name": "Sales Invoice",
 					"label": _("Sales Invoice"),
 					"description": _("View Invoices"),
@@ -37,6 +43,14 @@ def get_data():
 					"label": _("Attendance"),
 					"description": _("Attendance"),
 				},
+				{
+					"type": "page",
+					"name": "production-forecast",
+					"icon": "icon-bullseye",
+					"label": _("Production Forecast"),
+					"link": "production-forecast",
+					"description": _("Production Forecast"),
+				},
 			]
 		},
 
@@ -46,9 +60,35 @@ def get_data():
 			"items": [
 					{
 					"type": "report",
+					"name":"General Ledger",
+					"doctype": "GL Entry",
+					"is_query_report": True,
+					"icon":"icon-file-text"
+					},
+					{
+					"type": "report",
 					"is_query_report": True,
 					"name": "Accounts Receivable",
 					"doctype": "Sales Invoice"
+					},
+					{
+					"type": "page",
+					"name": "sales-analytics",
+					"label": _("Sales Analytics"),
+					"icon": "icon-bar-chart",
+					},
+					{
+						"type": "page",
+						"name": "sales-funnel",
+						"label": _("Sales Funnel"),
+						"icon": "icon-bar-chart",
+					},
+					{
+						"type": "report",
+						"is_query_report": True,
+						"name": "Customer Acquisition and Loyalty",
+						"doctype": "Customer",
+						"icon": "icon-bar-chart",
 					},
 			]
 		},

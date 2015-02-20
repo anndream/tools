@@ -3,7 +3,6 @@ import itertools
 
 @frappe.whitelist()
 def get_result_set(search_string):
-	frappe.errprint( [get_sales(search_string)])
 	return{
 		'sales': get_sales(search_string),
 		'purchase': get_purchase(search_string),
@@ -19,7 +18,7 @@ def get_sales(search_string):
 def get_cust(search_string, sales):
 	cust = frappe.db.sql(""" select concat('<a href="#Form/Customer/',name,'">', name, '</a>', '<br> Customer <br>' ) from tabCustomer 
 		where customer_name like '%%%(search_string)s%%' 
-		or customer_type like '%%%(search_string)s%%' or customer_group like '%%%(search_string)s%%' """%{'search_string':search_string}, as_list=1, debug=1)
+		or customer_type like '%%%(search_string)s%%' or customer_group like '%%%(search_string)s%%' """%{'search_string':search_string}, as_list=1)
 	sales.extend(cust)
 
 def get_sales_invoice(search_string, sales):
@@ -44,7 +43,7 @@ def get_purchase(search_string):
 def get_supllier(search_string, purchase):
 	supplier = frappe.db.sql(""" select concat('<a href="#Form/Supplier/',name,'">', name, '</a>', '<br> Supplier <br>' ) from tabSupplier 
 		where supplier_name like '%%%(search_string)s%%' 
-		or supplier_type like '%%%(search_string)s%%'"""%{'search_string':search_string}, as_list=1, debug=1)
+		or supplier_type like '%%%(search_string)s%%'"""%{'search_string':search_string}, as_list=1)
 	purchase.extend(supplier)	
 
 def get_purchase_invoice(search_string, purchase):
@@ -55,7 +54,7 @@ def get_purchase_invoice(search_string, purchase):
 			or (pii.item_code like '%%%(search_string)s%%'
 			or pii.item_name like '%%%(search_string)s%%'
 			and pii.parent = pi.name)
-			"""%{'search_string': search_string},as_list=1,debug=1)
+			"""%{'search_string': search_string},as_list=1)
 	purchase.extend(pi)	
 
 def get_purchase_order(search_string, purchase):
@@ -66,7 +65,7 @@ def get_purchase_order(search_string, purchase):
 			or (poi.item_code like '%%%(search_string)s%%'
 			or poi.item_name like '%%%(search_string)s%%'
 			and poi.parent = po.name)
-			"""%{'search_string': search_string},as_list=1,debug=1)
+			"""%{'search_string': search_string},as_list=1)
 	purchase.extend(po)	
 
 def get_inventory(search_string):
@@ -84,7 +83,7 @@ def get_item(search_string, inventory):
 		or description like '%%%(search_string)s%%'
 		or stock_uom like '%%%(search_string)s%%'
 		or brand like '%%%(search_string)s%%'
-		or barcode like '%%%(search_string)s%%'"""%{'search_string':search_string}, as_list=1, debug=1)
+		or barcode like '%%%(search_string)s%%'"""%{'search_string':search_string}, as_list=1)
 	inventory.extend(item)
 
 def get_purchase_receipt(search_string, inventory):
@@ -95,7 +94,7 @@ def get_purchase_receipt(search_string, inventory):
 			or (pri.item_code like '%%%(search_string)s%%' 
 			or pri.item_name like '%%%(search_string)s%%' 
 			or pri.serial_no like '%%%(search_string)s%%' 
-			and pri.parent = pr.name) """%{'search_string':search_string}, as_list=1, debug=1)
+			and pri.parent = pr.name) """%{'search_string':search_string}, as_list=1)
 	inventory.extend(pr)
 
 def get_delivery_note(search_string, inventory):
@@ -106,7 +105,7 @@ def get_delivery_note(search_string, inventory):
 			or (dni.item_code like '%%%(search_string)s%%'
 			or dni.item_name like '%%%(search_string)s%%'
 			or dni.serial_no like '%%%(search_string)s%%'
-			and dni.parent = dn.name)"""%{'search_string':search_string}, as_list=1, debug=1)
+			and dni.parent = dn.name)"""%{'search_string':search_string}, as_list=1)
 	inventory.extend(dn)
 
 def get_stock_entry(search_string, inventory):
@@ -115,5 +114,5 @@ def get_stock_entry(search_string, inventory):
 		where (sed.item_code like '%%%(search_string)s%%'
 			or sed.item_name like '%%%(search_string)s%%'
 			or sed.serial_no like '%%%(search_string)s%%'
-			and sed.parent = se.name)"""%{'search_string':search_string}, as_list=1, debug=1)
+			and sed.parent = se.name)"""%{'search_string':search_string}, as_list=1)
 	inventory.extend(se)
