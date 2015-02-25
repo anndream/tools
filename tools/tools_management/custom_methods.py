@@ -241,7 +241,7 @@ def cut_order_generation(work_order, invoice_no):
 						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)
 
 def get_wo_item(work_order):
-	return frappe.db.get_value('Work Order', work_order, 'item_code')
+	return frappe.db.get_value('Work Order', work_order, 'parent_item_code') or frappe.db.get_value('Work Order', work_order, 'item_code')
 
 def check_cut_order_exist(invoice_no, item_code):
 	return frappe.db.get_value('Cut Order', {'invoice_no': invoice_no, 'article_code': item_code}, 'name')
@@ -339,6 +339,9 @@ def get_warehouse(branch):
 	return frappe.db.get_value('Branches', branch, 'warehouse')
 
 def make_cut_order(id, invoice_no, proc_warehouse, warehouse, item_details, mr_view=None):
+	# frappe.errprint(item_details)
+	# frappe.errprint(fefef)
+	
 	co = frappe.new_doc("Cut Order")
 	co.invoice_no = invoice_no
 	co.article_code = item_details[2]
@@ -433,8 +436,8 @@ def reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data):
 					data[args.tailoring_item_code] = json.dumps(qty)
 				else:
 					frappe.throw(_("Fabric qty is not selected for item {0}").format(args.tailoring_item_code))	
-			else:
-				frappe.throw(_("Fabric is not selected for item {0}").format(args.tailoring_item_code))
+			# else:
+			# 	frappe.throw(_("Fabric is not selected for item {0}").format(args.tailoring_item_code))
 	return data
 
 def get_fabric_Available_qty(fabric_code, item_code, fab_qty):
