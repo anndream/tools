@@ -23,6 +23,9 @@ def branches_creation(doc):
 		br.branch_name = doc.branch
 		br.warehouse = doc.warehouse
 		br.save(ignore_permissions=True)
+	name = frappe.db.get_value('Branches', doc.branch, 'name')
+	if name:
+		frappe.db.sql(""" update `tabBranches` set warehouse = '%s' where name = '%s'"""%(doc.warehouse, name))
 
 def territory_creation(doc):
 	if frappe.db.get_value('Territory', doc.branch, 'name')!= doc.branch:

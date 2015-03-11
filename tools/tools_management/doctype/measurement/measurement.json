@@ -131,7 +131,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-01-16 22:27:44.307377", 
+ "modified": "2015-03-07 05:16:28.793136", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Measurement", 
@@ -157,17 +157,19 @@
    "write": 1
   }, 
   {
-   "permlevel": 0, 
-   "read": 1, 
-   "role": "All"
-  }, 
-  {
    "create": 1, 
    "delete": 1, 
    "permlevel": 0, 
    "read": 1, 
    "role": "System Manager", 
    "write": 1
+  }, 
+  {
+   "create": 0, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Sales User", 
+   "write": 0
   }
  ], 
  "read_only": 0, 

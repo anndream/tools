@@ -75,7 +75,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-12-30 00:48:55.421812", 
+ "modified": "2015-03-07 05:34:30.566563", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Style", 
@@ -101,9 +101,20 @@
    "write": 1
   }, 
   {
+   "create": 1, 
+   "delete": 1, 
    "permlevel": 0, 
    "read": 1, 
-   "role": "All"
+   "role": "System Manager", 
+   "write": 1
+  }, 
+  {
+   "create": 1, 
+   "delete": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Sales User", 
+   "write": 1
   }
  ], 
  "read_only": 0, 

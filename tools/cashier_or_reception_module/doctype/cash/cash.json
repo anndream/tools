@@ -35,7 +35,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2014-11-14 12:22:46.061972", 
+ "modified": "2015-03-07 05:41:08.628947", 
  "modified_by": "Administrator", 
  "module": "Cashier Or Reception Module", 
  "name": "Cash", 
@@ -45,7 +45,7 @@
   {
    "permlevel": 0, 
    "read": 1, 
-   "role": "All"
+   "role": "Guest"
   }
  ], 
  "read_only": 0, 

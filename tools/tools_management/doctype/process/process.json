@@ -37,7 +37,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 0, 
- "modified": "2015-01-16 14:40:53.823326", 
+ "modified": "2015-03-07 05:15:42.290498", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Process", 
@@ -63,9 +63,21 @@
    "write": 1
   }, 
   {
+   "create": 1, 
    "permlevel": 0, 
    "read": 1, 
-   "role": "All"
+   "role": "System Manager", 
+   "write": 1
+  }, 
+  {
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Sales User"
+  }, 
+  {
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Manufacturing User"
   }
  ], 
  "read_only": 0, 

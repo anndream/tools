@@ -41,7 +41,7 @@
  "is_submittable": 0, 
  "issingle": 1, 
  "istable": 0, 
- "modified": "2014-11-07 12:46:50.259144", 
+ "modified": "2015-03-07 05:21:50.000108", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Tool Maintenance", 
@@ -64,6 +64,27 @@
    "role": "All", 
    "set_user_permissions": 0, 
    "submit": 0, 
+   "write": 1
+  }, 
+  {
+   "create": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Manufacturing User", 
+   "write": 1
+  }, 
+  {
+   "create": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Cashier", 
+   "write": 1
+  }, 
+  {
+   "create": 1, 
+   "permlevel": 0, 
+   "read": 1, 
+   "role": "Accounts User", 
    "write": 1
   }
  ], 
