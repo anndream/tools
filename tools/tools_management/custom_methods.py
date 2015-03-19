@@ -413,7 +413,7 @@ def get_unfinished_process(doctype, txt, searchfield, start, page_len, filters):
 	if filters.get('get_finished_list'):
 		cond = "name not in ('%s')"%(filters.get('get_finished_list'))
 	return frappe.db.sql("""select distinct process_name from `tabProcess Item` 
-		where parent = '%s' and trials = 1 and %s"""%(filters.get('item_code'), cond))
+		where parent = '%s' and trials = 1 and %s """%(filters.get('item_code'), cond))
 
 
 def validate_reserve_fabric(doc, method):
