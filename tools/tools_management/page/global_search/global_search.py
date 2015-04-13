@@ -22,7 +22,7 @@ def get_cust(search_string, sales):
 	sales.extend(cust)
 
 def get_sales_invoice(search_string, sales):
-	si = frappe.db.sql(""" select concat('<a href="#Form/Sales Invoice/',si.name,'">', si.name, '</a>',
+	si = frappe.db.sql(""" select concat('Invoice No <a href="#Form/Sales Invoice/',si.name,'">', si.name, '</a> was booked on  ',si.posting_date,'    ',
 		'<br> Total Advance', si.total_advance,'<br> Outstanding ', si.outstanding_amount,'<br> Total', si.rounded_total_export) 
 		from `tabSales Invoice` si, `tabSales Invoice Item` sii
 		where (si.customer like '%%%(search_string)s%%' )
@@ -31,6 +31,7 @@ def get_sales_invoice(search_string, sales):
 			or sii.item_name like '%%%(search_string)s%%'
 			and sii.parent = si.name)
 			"""%{'search_string': search_string})
+	frappe.errprint(si)
 	sales.extend(si)
 
 def get_purchase(search_string):
@@ -74,6 +75,7 @@ def get_inventory(search_string):
 	pr = get_purchase_receipt(search_string, inventory)
 	dn = get_delivery_note(search_string, inventory)
 	se = get_stock_entry(search_string, inventory)
+	sn = get_serial_no(search_string, inventory)
 	return inventory
 
 def get_item(search_string, inventory):
@@ -116,3 +118,31 @@ def get_stock_entry(search_string, inventory):
 			or sed.serial_no like '%%%(search_string)s%%'
 			and sed.parent = se.name)"""%{'search_string':search_string}, as_list=1)
 	inventory.extend(se)
+
+def get_serial_no(search_string,inventory):
+	sn = frappe.db.sql(""" SELECT
+		    concat('<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>','<br>Status :',ifnull
+		    (snd.status,'Ready For Processing'),'<br>Warehouse :',ifnull(sno.warehouse,''))
+		FROM
+		    `tabSerial No` sno
+		LEFT JOIN
+		    `tabSerial No Detail` snd
+		ON
+		    snd.parent= sno.name
+		WHERE
+		    sno.name LIKE '%%%(search_string)s%%'
+		AND((
+		            snd.creation=
+		            (
+		                SELECT
+		                    MAX(creation)
+		                FROM
+		                    `tabSerial No Detail`
+		                WHERE
+		                    parent LIKE '%%%(search_string)s%%'
+		                     ))
+		    OR  (
+		            snd.parent IS NULL))
+		ORDER BY
+		    snd.creation ASC """%{'search_string':search_string},as_list=1)
+	inventory.extend(sn)    
