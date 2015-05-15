@@ -225,7 +225,7 @@ def cut_order_generation(work_order, invoice_no):
 	if not check_cut_order_exist(invoice_no, item):
 		fabric_details = get_fabric_info(invoice_no)
 		user_warehouse = get_user_branch()
-		if fabric_details:
+		if fabric_details.get(item):
 			warehouse_details = eval(fabric_details.get(item))
 			for warehouse in warehouse_details:
 				for item_details in warehouse_details[warehouse]:
@@ -241,7 +241,7 @@ def cut_order_generation(work_order, invoice_no):
 
 					if proc_warehouse != warehouse and user_warehouse != warehouse:
 						# make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
-						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)
+						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)			
 
 def get_wo_item(work_order):
 	return frappe.db.get_value('Work Order', work_order, 'parent_item_code') or frappe.db.get_value('Work Order', work_order, 'item_code')
@@ -342,9 +342,6 @@ def get_warehouse(branch):
 	return frappe.db.get_value('Branches', branch, 'warehouse')
 
 def make_cut_order(id, invoice_no, proc_warehouse, warehouse, item_details, mr_view=None):
-	# frappe.errprint(item_details)
-	# frappe.errprint(fefef)
-	
 	co = frappe.new_doc("Cut Order")
 	co.invoice_no = invoice_no
 	co.article_code = item_details[2]
@@ -411,23 +408,24 @@ def get_process_details(doctype, txt, searchfield, start, page_len, filters):
 def get_unfinished_process(doctype, txt, searchfield, start, page_len, filters):
 	cond = "1=1"
 	if filters.get('get_finished_list'):
-		cond = "name not in ('%s')"%(filters.get('get_finished_list'))
+		cond = "process_name not in %s "%(filters.get('get_finished_list'))
 	return frappe.db.sql("""select distinct process_name from `tabProcess Item` 
 		where parent = '%s' and trials = 1 and %s """%(filters.get('item_code'), cond))
 
 
 def validate_reserve_fabric(doc, method):
 	import json
-	data = json.loads(doc.fabric_details)
-	# if data:
-	tailoring_data = doc.get('sales_invoice_items_one')
-	reserve_fab_list = []
-	if tailoring_data:
-		for s in data:
-			reserve_fab_list.append(s)
-		data_dict = reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data)
-		doc.fabric_details = json.dumps(data_dict)
-	return True
+	if doc.fabric_details:
+		data = json.loads(doc.fabric_details)
+		# if data:
+		tailoring_data = doc.get('sales_invoice_items_one')
+		reserve_fab_list = []
+		if tailoring_data:
+			for s in data:
+				reserve_fab_list.append(s)
+			data_dict = reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data)
+			doc.fabric_details = json.dumps(data_dict)
+		return True	
 
 def reserve_fabric_for_UnreserveItem(tailoring_data, reserve_fab_list, data):
 	import json

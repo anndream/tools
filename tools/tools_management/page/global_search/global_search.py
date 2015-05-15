@@ -23,15 +23,17 @@ def get_cust(search_string, sales):
 
 def get_sales_invoice(search_string, sales):
 	si = frappe.db.sql(""" select concat('Invoice No <a href="#Form/Sales Invoice/',si.name,'">', si.name, '</a> was booked on  ',si.posting_date,'    ',
-		'<br> Total Advance', si.total_advance,'<br> Outstanding ', si.outstanding_amount,'<br> Total', si.rounded_total_export) 
+		    "<br>Customer Name :<a href='#Form/Customer/" , si.customer,"'>",si.customer,'</a>'
+		    '<br> Total Advance : ', si.total_advance,'<br> Outstanding : ', si.outstanding_amount,'<br> Total : ', si.rounded_total_export) 
 		from `tabSales Invoice` si, `tabSales Invoice Item` sii
 		where (si.customer like '%%%(search_string)s%%' )
-			or (sii.barcode like '%%%(search_string)s%%'
+			or ( sii.barcode like '%%%(search_string)s%%'
 			or sii.item_code like '%%%(search_string)s%%'
 			or sii.item_name like '%%%(search_string)s%%'
-			and sii.parent = si.name)
-			"""%{'search_string': search_string})
-	frappe.errprint(si)
+			or si.name like '%%%(search_string)s%%')
+			and sii.parent = si.name
+			group by si.name
+			"""%{'search_string': search_string},debug=True)
 	sales.extend(si)
 
 def get_purchase(search_string):
@@ -121,14 +123,32 @@ def get_stock_entry(search_string, inventory):
 
 def get_serial_no(search_string,inventory):
 	sn = frappe.db.sql(""" SELECT
-		    concat('<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>','<br>Status :',ifnull
-		    (snd.status,'Ready For Processing'),'<br>Warehouse :',ifnull(sno.warehouse,''))
-		FROM
-		    `tabSerial No` sno
-		LEFT JOIN
-		    `tabSerial No Detail` snd
-		ON
-		    snd.parent= sno.name
+    concat('<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>',"<br>Process : ",ifnull
+    (snd.process,''),"<br>Status : ",
+    CASE
+        WHEN wo.status !='Release'
+        THEN 'Not Released'
+        WHEN sno.status='Delivered'
+        THEN sno.status
+        WHEN sno.completed='Yes'
+        THEN 'All Trials Completed'
+        ELSE ifnull(snd.status,'Ready For Manufacturing')
+    END,"<br>Trial No : ", ifnull(snd.trial_no,'No'),    
+    CASE
+        WHEN snd.has_qc=1
+        THEN concat("<br>QC Status :",ifnull(snd.qc_completed,'Incomplete'))
+        ELSE ''
+    END,'<br>Warehouse :', ifnull(sno.warehouse,''))
+FROM
+    `tabSerial No` sno
+LEFT JOIN
+    `tabSerial No Detail` snd
+ON
+    snd.parent= sno.name
+LEFT JOIN
+    `tabWork Order` wo
+ON
+    wo.name = sno.work_order
 		WHERE
 		    sno.name LIKE '%%%(search_string)s%%'
 		AND((
