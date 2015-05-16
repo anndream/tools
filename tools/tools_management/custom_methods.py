@@ -18,7 +18,7 @@ def branch_methods(doc, method):
 	# territory_creation(doc)
 
 def branches_creation(doc):
-	if frappe.db.get_value('Branches', doc.branch, 'name') != doc.branch:
+	if not frappe.db.get_value('Branches', doc.branch, 'name'):
 		br = frappe.new_doc('Branches')
 		br.branch_name = doc.branch
 		br.warehouse = doc.warehouse
@@ -28,7 +28,7 @@ def branches_creation(doc):
 		frappe.db.sql(""" update `tabBranches` set warehouse = '%s' where name = '%s'"""%(doc.warehouse, name))
 
 def territory_creation(doc):
-	if frappe.db.get_value('Territory', doc.branch, 'name')!= doc.branch:
+	if not frappe.db.get_value('Territory', doc.branch, 'name'):
 		br = frappe.new_doc('Territory')
 		br.territory_name = doc.branch
 		br.is_group = 'No'
