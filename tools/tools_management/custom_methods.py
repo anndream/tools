@@ -102,6 +102,7 @@ def merge_tailoring_items(doc,method):
 		e.base_price_list_rate=d.tailoring_base_price_list_rate
 		e.qty=d.tailoring_qty
 		e.base_price_list_rate=d.tailoring_base_price_list_rate
+		e.delivery_date  =  d.tailoring_delivery_date
 		amt += flt(e.amount)
 	amount = merge_merchandise_items(doc)
 	doc.net_total_export = cstr(flt(amount) + flt(amt))
@@ -141,6 +142,7 @@ def merge_merchandise_items(doc):
 		e.base_price_list_rate=d.merchandise_base_price_list_rate
 		e.qty=d.merchandise_qty
 		e.base_price_list_rate=d.merchandise_base_price_list_rate
+		e.delivery_date  =  d.merchandise_delivery_date
 		amount += flt(e.amount) 
 	return amount
 
@@ -158,6 +160,7 @@ def get_merchandise_item_details(doc, item):
 	for d in doc.get('merchandise_item'):
 		if d.merchandise_item_code == item:
 			d.merchandise_item_name = frappe.db.get_value('Item', item, 'item_name')
+			d.merchandise_item_group =frappe.db.get_value('Item', item, 'item_group')
 			d.merchandise_description = frappe.db.get_value('Item', item, 'description')
 			d.merchandise_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.merchandise_rate = frappe.db.get_value('Item Price',{'price_list':d.merchandise_price_list,'item_code':item},'price_list_rate')
@@ -167,7 +170,7 @@ def get_merchandise_item_details(doc, item):
 @frappe.whitelist()
 def get_styles_details(item, style):
 	return frappe.db.sql("""select name,  ifnull(image_viewer, ''), ifnull(default_value,''), ifnull(abbreviation,''),
-	ifnull(cost_to_customer,0.00), ifnull(cost_to_tailor,'') from `tabStyle Item`
+	ifnull(cost_to_customer,0.00), ifnull(process_wise_tailor_cost,'') from `tabStyle Item`
 		where parent='%s' and style='%s'"""%(item, style),as_list=1)
 
 @frappe.whitelist()
@@ -181,15 +184,17 @@ def get_warehouse_wise_stock_balance(item, qty):
 		co_qty = frappe.db.sql(""" select b.name, sum(fr.qty) from `tabFabric Reserve` fr, `tabBranch` b
        			where fr.fabric_code = '%s'
        				and fr.fabric_site = b.name and ifnull(fr.stock_entry_status , '') <> 'Completed'
-      			group by b.name"""%item, as_list=1)
+      			group by b.name"""%item, as_list=1)	
 
 		if len(actual_qty)>0 and len(co_qty) > 0:
-			for qty_detail in actual_qty:
-				for co_detail in co_qty:
+			for co_detail in co_qty:
+				for qty_detail in actual_qty:
 					if qty_detail[2] == co_detail[0]:
 						if (flt(qty_detail[1]) - flt(co_detail[1])) > 0:
-							fab_qty.append([ qty_detail[0], flt(qty_detail[1]) - flt(co_detail[1]), qty_detail[2]])
-						actual_qty.remove(qty_detail)
+							# fab_qty.append([ qty_detail[0], flt(qty_detail[1]) - flt(co_detail[1]), qty_detail[2]])
+							qty_detail[1] = flt(qty_detail[1]) - flt(co_detail[1])
+						else:
+							actual_qty.remove(qty_detail)
 		fab_qty.extend(actual_qty)
 		return fab_qty
 
@@ -201,47 +206,43 @@ def update_work_order(doc, method):
 
 def create_se_or_mr(doc, method):
 	import json
-	if doc.fabric_details:
-		fabric_details = json.loads(doc.fabric_details)
-		user_warehouse = get_user_branch()
-		for item in fabric_details:
-			warehouse_details = fabric_details.get(item)
-			for warehouse in eval(warehouse_details):
-				for item_details in eval(warehouse_details)[warehouse]:
-					proc_warehouse = get_actual_fabrc_warehouse(doc.name, item_details[2])
-					if proc_warehouse == warehouse and user_warehouse == warehouse:
-						make_reserve_fabric_etry(1, doc, proc_warehouse, warehouse, item_details)
-						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+	for row in doc.get('sales_invoice_items_one'):
+		if row.fabric_code:
+			if row.reserve_fabric_qty:
+				fabric_details = json.loads(row.reserve_fabric_qty)
+				user_warehouse = get_user_branch()
+				for item in fabric_details:
+					warehouse_details = eval(fabric_details.get(item))
+					for warehouse in warehouse_details:
+						proc_warehouse = get_actual_fabrc_warehouse(doc.name, warehouse_details[warehouse][2])
+						make_reserve_fabric_etry(1, doc, proc_warehouse, warehouse,warehouse_details[warehouse])
+			elif not row.reserve_fabric_qty:				
+				frappe.throw("Fabric is not Reserved for Item {0} for row {1}".format(row.tailoring_item_code,row.idx))	
 
-					if proc_warehouse != warehouse and user_warehouse == warehouse:
-						make_reserve_fabric_etry(2, doc, proc_warehouse, warehouse, item_details)
-						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
-
-					if proc_warehouse != warehouse and user_warehouse != warehouse:
-						make_reserve_fabric_etry(doc.name, proc_warehouse, warehouse, item_details)
 
 def cut_order_generation(work_order, invoice_no):
 	item = get_wo_item(work_order)
+	import json
 	if not check_cut_order_exist(invoice_no, item):
-		fabric_details = get_fabric_info(invoice_no)
 		user_warehouse = get_user_branch()
-		if fabric_details.get(item):
-			warehouse_details = eval(fabric_details.get(item))
-			for warehouse in warehouse_details:
-				for item_details in warehouse_details[warehouse]:
-					proc_warehouse = get_actual_fabrc_warehouse(invoice_no, item_details[2])
-					
-					if proc_warehouse == warehouse and user_warehouse == warehouse:
-						make_cut_order(1, invoice_no, proc_warehouse, warehouse, item_details)
-						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
+		my_doc = frappe.get_doc('Sales Invoice',invoice_no)
+		for row in my_doc.get('sales_invoice_items_one'):
+			if row.fabric_code and row.tailoring_item_code == item:
+				if row.reserve_fabric_qty:
+					fabric_details = json.loads(row.reserve_fabric_qty)
+					if fabric_details.get(item):
+						warehouse_details = eval(fabric_details.get(item))
+						for warehouse in warehouse_details:
+							proc_warehouse = get_actual_fabrc_warehouse(invoice_no, warehouse_details[warehouse][2])
+							make_cut_order(1, invoice_no, proc_warehouse, warehouse, warehouse_details[warehouse])
+	
+				elif not row.reserve_fabric_qty:				
+					frappe.throw("Fabric is not Reserved for Item {0} for row {1} in Sales Invoice {2}".format(row.tailoring_item_code,row.idx,invoice_no))	
+	
 
-					if proc_warehouse != warehouse and user_warehouse == warehouse:
-						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)
-						# make_stock_transfer(proc_warehouse, warehouse, item_details[0], item_details[1])
 
-					if proc_warehouse != warehouse and user_warehouse != warehouse:
-						# make_material_request(doc.name, proc_warehouse, warehouse, item_details[0], item_details[1])
-						make_cut_order(2, invoice_no, proc_warehouse, warehouse, item_details)			
+		
+		
 
 def get_wo_item(work_order):
 	return frappe.db.get_value('Work Order', work_order, 'parent_item_code') or frappe.db.get_value('Work Order', work_order, 'item_code')
@@ -337,6 +338,7 @@ def make_material_request(si_no, proc_warehouse, warehouse, fabric, qty):
 	mrqd.schedule_date = add_days(nowdate(), 2)
 
 	mrq.save(ignore_permissions=True)
+	return mrq.name
 
 def get_warehouse(branch):
 	return frappe.db.get_value('Branches', branch, 'warehouse')
