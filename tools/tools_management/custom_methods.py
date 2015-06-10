@@ -47,7 +47,7 @@ def generate_project_aginst_si(doc, method):
 		pt.project_name = doc.name
 		pt.project_start_date = now()
 		pt.save(ignore_permissions=True)
-		generate_task(doc, method, pt.name)		
+		# generate_task(doc, method, pt.name)		
 
 def generate_task(doc, method, name):
 	for d in doc.get('entries'):
@@ -270,7 +270,7 @@ def get_actual_fabrc_warehouse(si, item):
 	else:
 		data = frappe.db.sql("""select warehouse from `tabProcess Wise Warehouse Detail` 
 					where parent = ( select name from `tabWork Order` 
-						where sales_invoice_no = '%s' and item_code = '%s' limit 1) order by name desc limit 1"""%(si, item), as_list=1)
+						where sales_invoice_no = '%s' and item_code = '%s' limit 1) and idx=1 """%(si, item), as_list=1)
 		if data:
 			return data[0][0]
 

@@ -105,7 +105,7 @@
    "set_only_once": 0
   }, 
   {
-   "allow_on_submit": 0, 
+   "allow_on_submit": 1, 
    "fieldname": "value", 
    "fieldtype": "Float", 
    "hidden": 0, 
@@ -131,7 +131,7 @@
  "is_submittable": 0, 
  "issingle": 0, 
  "istable": 1, 
- "modified": "2015-01-27 13:10:42.220674", 
+ "modified": "2015-06-04 06:20:11.996792", 
  "modified_by": "Administrator", 
  "module": "Tools Management", 
  "name": "Measurement Item", 
