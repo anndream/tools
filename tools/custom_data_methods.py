@@ -34,19 +34,19 @@ def gererate_QRcode(code, docname):
 	if not os.path.exists(directory):
 		
 		os.makedirs(directory)
-		
 
 	if directory:
 		code1=code.replace("/","-")
 		filpath = directory + code1
 		qr = qrcode.QRCode(  version=1,
     		error_correction=qrcode.constants.ERROR_CORRECT_L,
-    		box_size=3,
+    		box_size=4,
    		 	border=2);
+		qr.add_data(code)
 		qr.make(fit=True);		
 		img= qr.make_image()
-		
-		fulname=img.save(filpath+".png")			
+		image_file = open(filpath+".png",'w+')
+		fulname=img.save(image_file)		
 	return fulname or None	
 
 
@@ -68,7 +68,8 @@ def generate_barcode(code, docname):
 
 		barcode.PROVIDED_BARCODES
 		EAN = barcode.get_barcode_class('Code39')	
-		ean = EAN(code)	
+		ean = EAN(code)
+		ean.writer.set_options({"module_height":6.0})
 		fullname = ean.save(filpath)
 		return code1 or None
 
