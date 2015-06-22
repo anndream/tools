@@ -33,7 +33,7 @@ def get_sales_invoice(search_string, sales):
 			or si.name like '%%%(search_string)s%%')
 			and sii.parent = si.name
 			group by si.name
-			"""%{'search_string': search_string},debug=True)
+			"""%{'search_string': search_string})
 	sales.extend(si)
 
 def get_purchase(search_string):

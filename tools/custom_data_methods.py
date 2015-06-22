@@ -67,7 +67,7 @@ def generate_barcode(code, docname):
 		filpath = directory + code1
 
 		barcode.PROVIDED_BARCODES
-		EAN = barcode.get_barcode_class('Code39')	
+		EAN = barcode.get_barcode_class('Code39')
 		ean = EAN(code)
 		ean.writer.set_options({"module_height":6.0})
 		fullname = ean.save(filpath)
