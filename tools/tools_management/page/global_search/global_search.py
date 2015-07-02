@@ -122,47 +122,46 @@ def get_stock_entry(search_string, inventory):
 	inventory.extend(se)
 
 def get_serial_no(search_string,inventory):
-	sn = frappe.db.sql(""" SELECT
-    concat('<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>',"<br>Process : ",ifnull
-    (snd.process,''),"<br>Status : ",
-    CASE
-        WHEN wo.status !='Release'
-        THEN 'Not Released'
-        WHEN sno.status='Delivered'
-        THEN sno.status
-        WHEN sno.completed='Yes'
-        THEN 'All Trials Completed'
-        ELSE ifnull(snd.status,'Ready For Manufacturing')
-    END,"<br>Trial No : ", ifnull(snd.trial_no,'No'),    
-    CASE
-        WHEN snd.has_qc=1
-        THEN concat("<br>QC Status :",ifnull(snd.qc_completed,'Incomplete'))
-        ELSE ''
-    END,'<br>Warehouse :', ifnull(sno.warehouse,''))
-FROM
-    `tabSerial No` sno
-LEFT JOIN
-    `tabSerial No Detail` snd
-ON
-    snd.parent= sno.name
-LEFT JOIN
-    `tabWork Order` wo
-ON
-    wo.name = sno.work_order
-		WHERE
-		    sno.name LIKE '%%%(search_string)s%%'
-		AND((
-		            snd.creation=
-		            (
-		                SELECT
-		                    MAX(creation)
-		                FROM
-		                    `tabSerial No Detail`
-		                WHERE
-		                    parent LIKE '%%%(search_string)s%%'
-		                     ))
-		    OR  (
-		            snd.parent IS NULL))
-		ORDER BY
-		    snd.creation ASC """%{'search_string':search_string},as_list=1)
-	inventory.extend(sn)    
+	data = frappe.db.sql(""" select name from `tabSerial No` where name like '%%%(search_string)s%%'"""%{'search_string':search_string}, as_list=1)
+	if data:
+		for serial_no in data:
+			sn = frappe.db.sql(""" SELECT
+		    concat('Serial No : ', '<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>',"<br>Current Process  : ",ifnull
+		    (snd.process,''),"<br>Process Status : ",
+		    CASE
+		        WHEN wo.status !='Release'
+		        THEN 'Pending'
+		        WHEN sno.completed='Yes'
+		        THEN 'Completed'
+		        ELSE ifnull(snd.status,'Under Manufacturing Process')
+		    END,"<br>Product Status : ",
+		    CASE
+		        WHEN wo.status !='Release'
+		        THEN 'Work Order Not Release'
+		        WHEN sno.status='Delivered'
+		        THEN sno.status
+		        WHEN sno.completed='Yes'
+		        THEN 'Product is ready to deliver'
+		        ELSE 'Product is not ready to deliver'
+		    END,"<br>Trial No : ", ifnull(snd.trial_no,'No'),    
+		    CASE
+		        WHEN snd.has_qc=1
+		        THEN concat("<br>QC Status :",ifnull(snd.qc_completed,'Incomplete'))
+		        ELSE ''
+		    END,'<br>Warehouse :', ifnull(sno.warehouse,''), 
+		    '<br>Sales Invoice: ', '<a href="#Form/Sales Invoice/',sno.sales_invoice,'">',sno.sales_invoice,'</a>' ,'<br>Work Order: ', '<a href="#Form/Work Order/',sno.work_order,'">',sno.work_order, '</a>')
+		FROM
+		    `tabSerial No` sno
+		LEFT JOIN
+		    `tabSerial No Detail` snd
+		ON
+		    snd.parent= sno.name
+		LEFT JOIN
+		    `tabWork Order` wo
+		ON
+		    wo.name = sno.work_order
+				WHERE
+				    sno.name = '%s'
+				ORDER BY
+				    snd.creation DESC limit 1 """%(serial_no[0]),as_list=1)
+			inventory.extend(sn)    
