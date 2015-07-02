@@ -76,7 +76,7 @@ def get_inventory(search_string):
 	item = get_item(search_string, inventory)
 	pr = get_purchase_receipt(search_string, inventory)
 	dn = get_delivery_note(search_string, inventory)
-	se = get_stock_entry(search_string, inventory)
+	# se = get_stock_entry(search_string, inventory)
 	sn = get_serial_no(search_string, inventory)
 	return inventory
 
@@ -141,7 +141,7 @@ def get_serial_no(search_string,inventory):
 		        WHEN sno.status='Delivered'
 		        THEN sno.status
 		        WHEN sno.completed='Yes'
-		        THEN 'Product is ready to deliver'
+		        THEN 'Product is ready for delivery'
 		        ELSE 'Product is not ready to deliver'
 		    END,"<br>Trial No : ", ifnull(snd.trial_no,'No'),    
 		    CASE
