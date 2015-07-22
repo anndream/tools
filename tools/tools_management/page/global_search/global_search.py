@@ -126,7 +126,7 @@ def get_serial_no(search_string,inventory):
 	if data:
 		for serial_no in data:
 			sn = frappe.db.sql(""" SELECT
-		    concat('Serial No : ', '<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>',"<br>Current Process  : ",ifnull
+		    concat('Serial No : ', '<a href="#Form/Serial No/',sno.name,'">', sno.name, '</a>',"<br>Item Code  : ",sno.item_code,"<br>Item Name  : ",item_name,"<br>Item Description  : ",description,"<br>Current Process  : ",ifnull
 		    (snd.process,''),"<br>Process Status : ",
 		    CASE
 		        WHEN wo.status !='Release'

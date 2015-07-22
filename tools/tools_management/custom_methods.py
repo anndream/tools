@@ -7,6 +7,7 @@ from frappe.widgets.reportview import get_match_cond
 from frappe.utils import add_days, cint, cstr, date_diff, rounded, flt, getdate, nowdate, \
 	get_first_day, get_last_day,money_in_words, now, nowtime
 from frappe import _
+import json
 from frappe.model.db_query import DatabaseQuery
 
 def get_style(doctype, txt, searchfield, start, page_len, filters):
@@ -154,6 +155,8 @@ def get_item_details(doc, item):
 			d.tailoring_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.tailoring_rate = frappe.db.get_value('Item Price',{'price_list':d.tailoring_price_list,'item_code':item},'price_list_rate')
 			d.tailoring_branch = frappe.db.get_value('Item', item, 'default_branch')
+			obj = frappe.get_doc('Item', item)
+			d.tailoring_item_tax_rate = json.dumps(dict(([e.tax_type, e.tax_rate] for e in obj.get("item_tax"))))
 	return "Done"
 
 def get_merchandise_item_details(doc, item):
@@ -165,6 +168,8 @@ def get_merchandise_item_details(doc, item):
 			d.merchandise_stock_uom =frappe.db.get_value('Item', item, 'stock_uom')
 			d.merchandise_rate = frappe.db.get_value('Item Price',{'price_list':d.merchandise_price_list,'item_code':item},'price_list_rate')
 			d.merchandise_branch = frappe.db.get_value('Item', item, 'default_branch')
+			obj = frappe.get_doc('Item', item)
+			d.merchandise_item_tax_rate = json.dumps(dict(([e.tax_type, e.tax_rate] for e in obj.get("item_tax"))))
 	return "Done"
 
 @frappe.whitelist()
@@ -216,7 +221,7 @@ def create_se_or_mr(doc, method):
 					for warehouse in warehouse_details:
 						proc_warehouse = get_actual_fabrc_warehouse(doc.name, warehouse_details[warehouse][2])
 						make_reserve_fabric_etry(1, doc, proc_warehouse, warehouse,warehouse_details[warehouse])
-			elif not row.reserve_fabric_qty:				
+			elif not row.reserve_fabric_qty and frappe.db.get_value('Item', row.fabric_code, 'item_group')=='Fabric':				
 				frappe.throw("Fabric is not Reserved for Item {0} for row {1}".format(row.tailoring_item_code,row.idx))	
 
 
@@ -236,7 +241,7 @@ def cut_order_generation(work_order, invoice_no):
 							proc_warehouse = get_actual_fabrc_warehouse(invoice_no, warehouse_details[warehouse][2])
 							make_cut_order(1, invoice_no, proc_warehouse, warehouse, warehouse_details[warehouse])
 	
-				elif not row.reserve_fabric_qty:				
+				elif not row.reserve_fabric_qty and frappe.db.get_value('Item', row.fabric_code, 'item_group')=='Fabric':				
 					frappe.throw("Fabric is not Reserved for Item {0} for row {1} in Sales Invoice {2}".format(row.tailoring_item_code,row.idx,invoice_no))	
 	
 
