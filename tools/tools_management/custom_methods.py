@@ -77,6 +77,7 @@ def delete_project_aginst_si(doc, method):
 	frappe.db.sql("delete from `tabProject` where name='%s'"%(doc.name))	
 
 def merge_tailoring_items(doc,method):
+	frappe.errprint("hiiiiiiiiiiiiiiii")
 	doc.set('entries', [])
 	amt = amount = 0.0
 	for d in doc.get('sales_invoice_items_one'):
@@ -95,6 +96,7 @@ def merge_tailoring_items(doc,method):
 		e.item_tax_rate=d.tailoring_item_tax_rate
 		e.stock_uom=d.tailoring_stock_uom 
 		e.price_list_rate=d.tailoring_price_list_rate
+		e.trial_date = d.tailoring_trial_date
 		e.discount_percentage=d.tailoring_discount_percentage
 		e.amount= d.tailoring_amount
 		e.base_amount= cstr(flt(e.amount)*flt(doc.conversion_rate))
