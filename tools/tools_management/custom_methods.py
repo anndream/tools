@@ -77,7 +77,6 @@ def delete_project_aginst_si(doc, method):
 	frappe.db.sql("delete from `tabProject` where name='%s'"%(doc.name))	
 
 def merge_tailoring_items(doc,method):
-	frappe.errprint("hiiiiiiiiiiiiiiii")
 	doc.set('entries', [])
 	amt = amount = 0.0
 	for d in doc.get('sales_invoice_items_one'):
