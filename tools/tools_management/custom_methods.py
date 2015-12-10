@@ -241,17 +241,27 @@ def cut_order_generation(work_order, invoice_no):
 						for warehouse in warehouse_details:
 							proc_warehouse = get_actual_fabrc_warehouse(invoice_no, warehouse_details[warehouse][2])
 							make_cut_order(1, invoice_no, proc_warehouse, warehouse, warehouse_details[warehouse])
-	
-				elif not row.reserve_fabric_qty and frappe.db.get_value('Item', row.fabric_code, 'item_group')=='Fabric':				
-					frappe.throw("Fabric is not Reserved for Item {0} for row {1} in Sales Invoice {2}".format(row.tailoring_item_code,row.idx,invoice_no))	
-	
-
-
-		
-		
+				else:
+					fabric_detail = get_fabric_details_from_invoice(row)
+					warehouse = frappe.db.get_value('Process Wise Warehouse Detail', {'parent': work_order, 'idx':1}, 'warehouse')
+					if warehouse and fabric_detail:
+						for data in fabric_detail:
+							make_cut_order(1, invoice_no, warehouse, user_warehouse, data)
 
 def get_wo_item(work_order):
 	return frappe.db.get_value('Work Order', work_order, 'parent_item_code') or frappe.db.get_value('Work Order', work_order, 'item_code')
+
+def get_fabric_details_from_invoice(invoice_data):
+	product_details = get_clubbed_product(invoice_data.tailoring_item_code, invoice_data.fabric_code, invoice_data.fabric_qty) if cint(frappe.db.get_value('Item', invoice_data.tailoring_item_code, 'is_clubbed_product')) == 1 else [[invoice_data.fabric_code, invoice_data.fabric_qty ,invoice_data.tailoring_item_code]]
+	return product_details
+
+def get_clubbed_product(item_code, fabric_code, fabric_qty):
+	clubbed_list = []
+	data = frappe.db.get_values('Sales BOM Item', {'parent': item_code}, '*', as_dict=1)
+	fab_qty_for_clubbed = flt(fabric_qty) / flt(len(data)) if fabric_qty else 0.0 #divide clubbed product
+	for details in data:
+		clubbed_list.append([fabric_code, details.item_code, fab_qty_for_clubbed])
+	return clubbed_list
 
 def check_cut_order_exist(invoice_no, item_code):
 	return frappe.db.get_value('Cut Order', {'invoice_no': invoice_no, 'article_code': item_code}, 'name')
